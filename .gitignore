@@ -1,0 +1,8 @@
+# Ignore datasets
+data/raw/*
+!data/processed/*.csv   # (optional: allow small processed ones)
+
+# Ignore secrets
+*.env
+*.key
+*.pem
