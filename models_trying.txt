@@ -1,0 +1,17 @@
+Random Forest Classifier (RFC)
+eXtreme Gradient Boosting (XGBoost)
+Light Gradient Boosting Machine (LightGBM)
+Support Vector Machine (SVM)
+LinearSVC
+
+
+
+
+Improve by
+Threshold tuning:
+If you want fewer false alarms (false positives), you can slightly adjust the classification threshold.
+Compare models:
+Plot ROC curves for other models (e.g., XGBoost, LightGBM, SVM) and compare AUC values.
+
+Calibration:
+Consider probability calibration (CalibratedClassifierCV) to ensure confidence scores match reality.
