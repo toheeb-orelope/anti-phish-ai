@@ -1,4 +1,3 @@
-
 # Random Forest Classifier for Phishing URL Detection
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
