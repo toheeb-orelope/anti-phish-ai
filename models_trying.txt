@@ -3,7 +3,9 @@ eXtreme Gradient Boosting (XGBoost)
 Light Gradient Boosting Machine (LightGBM)
 Support Vector Machine (SVM)
 LinearSVC
-
+CNN
+Feedforward Neural Network (FFNN)
+Natural Language Processing (NLP) LSTM (Long Short-Term Memory)
 
 
 
