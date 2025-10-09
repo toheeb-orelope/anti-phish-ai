@@ -85,7 +85,12 @@ def train_ffnn():
     test_ds = URLDataset(test["url"], test["label"])
 
     train_loader = DataLoader(
-        train_ds, batch_size=256, shuffle=True, num_workers=2, pin_memory=True, persistent_workers=True
+        train_ds,
+        batch_size=256,
+        shuffle=True,
+        num_workers=2,
+        pin_memory=True,
+        persistent_workers=True,
     )
     val_loader = DataLoader(
         test_ds, batch_size=256, num_workers=2, pin_memory=True, persistent_workers=True
