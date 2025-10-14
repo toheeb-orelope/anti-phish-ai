@@ -9,3 +9,6 @@ data/raw/*
 
 # Ignore model files
 models/*.pkl
+models/*.npy
+models/*.csv
+models/*.ckpt
