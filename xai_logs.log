@@ -1,0 +1,51 @@
+2025-10-11 23:50:13,480 WARNING tree_predict_prob error: X has 13 features, but RandomForestClassifier is expecting 10 features as input.
+2025-10-11 23:50:13,489 WARNING tree_predict_prob error: Feature shape mismatch, expected: 10, got 13
+2025-10-11 23:50:13,489 WARNING tree_predict_prob error: X has 13 features, but LGBMClassifier is expecting 10 features as input.
+2025-10-11 23:50:13,883 WARNING deep_predict_prob error: Input type (__int64) and bias type (float) should be the same
+2025-10-11 23:50:14,071 WARNING deep_predict_prob error: mat1 and mat2 must have the same dtype, but got Long and Float
+2025-10-12 00:06:14,147 WARNING deep_predict_prob error: Input type (__int64) and bias type (float) should be the same
+2025-10-12 00:06:14,211 WARNING deep_predict_prob error: mat1 and mat2 must have the same dtype, but got Long and Float
+2025-10-12 00:15:14,989 WARNING deep_predict_prob error: Input type (__int64) and bias type (float) should be the same
+2025-10-12 00:15:15,057 WARNING deep_predict_prob error: mat1 and mat2 must have the same dtype, but got Long and Float
+2025-10-12 00:17:57,599 WARNING deep_predict_prob error: Input type (__int64) and bias type (float) should be the same
+2025-10-12 00:17:57,662 WARNING deep_predict_prob error: mat1 and mat2 must have the same dtype, but got Long and Float
+2025-10-12 00:23:45,662 WARNING deep_predict_prob error: Input type (__int64) and bias type (float) should be the same
+2025-10-12 00:23:45,748 WARNING deep_predict_prob error: mat1 and mat2 must have the same dtype, but got Long and Float
+2025-10-13 12:05:39,030 WARNING deep_predict_prob error: Input type (__int64) and bias type (float) should be the same
+2025-10-13 12:05:39,415 WARNING deep_predict_prob error: mat1 and mat2 must have the same dtype, but got Long and Float
+2025-10-13 12:05:41,516 INFO http://paypal-secure-login.verify-account123.com/login?user=%5BREDACTED%5D&token=%5BREDACTED%5D -> Benign (0.551)
+2025-10-13 13:55:04,759 WARNING deep_predict_prob error: Input type (__int64) and bias type (float) should be the same
+2025-10-13 13:55:05,019 WARNING deep_predict_prob error: mat1 and mat2 must have the same dtype, but got Long and Float
+2025-10-13 13:55:06,596 INFO http://paypal-secure-login.verify-account123.com/login?user=%5BREDACTED%5D&token=%5BREDACTED%5D -> Benign (0.551)
+2025-10-13 14:42:52,098 WARNING deep_predict_prob error: Input type (__int64) and bias type (float) should be the same
+2025-10-13 14:42:52,244 WARNING deep_predict_prob error: mat1 and mat2 must have the same dtype, but got Long and Float
+2025-10-13 14:42:54,292 INFO http://paypal-secure-login.verify-account123.com/login?user=%5BREDACTED%5D&token=%5BREDACTED%5D -> Benign (0.551)
+2025-10-13 20:24:15,687 WARNING deep_predict_prob error: Input type (__int64) and bias type (float) should be the same
+2025-10-13 20:24:15,814 WARNING deep_predict_prob error: mat1 and mat2 must have the same dtype, but got Long and Float
+2025-10-13 20:24:16,933 INFO http://paypal-secure-login.verify-account123.com/login?user=%5BREDACTED%5D&token=%5BREDACTED%5D -> Benign (0.551)
+2025-10-13 20:27:25,225 WARNING deep_predict_prob error: Input type (__int64) and bias type (float) should be the same
+2025-10-13 20:27:25,308 WARNING deep_predict_prob error: mat1 and mat2 must have the same dtype, but got Long and Float
+2025-10-13 20:27:26,365 INFO http://paypal-secure-login.verify-account123.com/login?user=%5BREDACTED%5D&token=%5BREDACTED%5D -> Benign (0.551)
+2025-10-14 06:48:18,322 WARNING deep_predict_prob error: Input type (__int64) and bias type (float) should be the same
+2025-10-14 06:48:18,493 WARNING deep_predict_prob error: mat1 and mat2 must have the same dtype, but got Long and Float
+2025-10-14 06:52:32,413 WARNING deep_predict_prob error: Input type (__int64) and bias type (float) should be the same
+2025-10-14 06:52:32,530 WARNING deep_predict_prob error: mat1 and mat2 must have the same dtype, but got Long and Float
+2025-10-14 06:52:34,127 INFO http://paypal-secure-login.verify-account123.com/login?user=%5BREDACTED%5D&token=%5BREDACTED%5D -> Benign (0.551)
+2025-10-14 07:35:22,789 WARNING deep_predict_prob error: Input type (__int64) and bias type (float) should be the same
+2025-10-14 07:35:22,947 WARNING deep_predict_prob error: mat1 and mat2 must have the same dtype, but got Long and Float
+2025-10-14 07:35:24,474 INFO http://paypal-secure-login.verify-account123.com/login?user=%5BREDACTED%5D&token=%5BREDACTED%5D -> Benign (0.551)
+2025-10-14 07:37:56,357 WARNING deep_predict_prob error: Input type (__int64) and bias type (float) should be the same
+2025-10-14 07:37:56,522 WARNING deep_predict_prob error: mat1 and mat2 must have the same dtype, but got Long and Float
+2025-10-14 07:37:58,844 INFO http://paypal-secure-login.verify-account123.com/login?user=%5BREDACTED%5D&token=%5BREDACTED%5D -> Benign (0.551)
+2025-10-14 07:40:47,364 WARNING deep_predict_prob error: Input type (__int64) and bias type (float) should be the same
+2025-10-14 07:40:47,576 WARNING deep_predict_prob error: mat1 and mat2 must have the same dtype, but got Long and Float
+2025-10-14 07:40:49,212 INFO http://paypal-secure-login.verify-account123.com/login?user=%5BREDACTED%5D&token=%5BREDACTED%5D -> Benign (0.551)
+2025-10-14 08:51:10,338 WARNING deep_predict_prob error: Input type (__int64) and bias type (float) should be the same
+2025-10-14 08:51:10,394 WARNING deep_predict_prob error: Expected all tensors to be on the same device, but found at least two devices, cpu and cuda:0! (when checking argument for argument index in method wrapper_CUDA__index_select)
+2025-10-14 08:51:10,396 WARNING deep_predict_prob error: mat1 and mat2 must have the same dtype, but got Long and Float
+2025-10-14 08:51:11,848 INFO http://paypal-secure-login.verify-account123.com/login?user=%5BREDACTED%5D&token=%5BREDACTED%5D -> Benign (0.641)
+2025-10-14 08:52:37,238 WARNING deep_predict_prob error: Input type (__int64) and bias type (float) should be the same
+2025-10-14 08:52:37,455 WARNING deep_predict_prob error: mat1 and mat2 must have the same dtype, but got Long and Float
+2025-10-14 08:52:39,386 INFO http://paypal-secure-login.verify-account123.com/login?user=%5BREDACTED%5D&token=%5BREDACTED%5D -> Benign (0.551)
+2025-10-14 09:01:53,631 INFO http://paypal-secure-login.verify-account123.com/login?user=%5BREDACTED%5D&token=%5BREDACTED%5D -> Phishing (0.545)
+2025-10-14 09:04:26,812 INFO http://paypal-secure-login.verify-account123.com/login?user=%5BREDACTED%5D&token=%5BREDACTED%5D -> Phishing (0.545)

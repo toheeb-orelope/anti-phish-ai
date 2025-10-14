@@ -1,0 +1,4 @@
+Model,Accuracy,Precision,Recall,F1_Score,ROC_AUC,True_Negative,False_Positive,False_Negative,True_Positive
+RandomForest,0.9674,0.9629,0.9722,0.9675,0.9939,76120,2966,2197,76888
+XGBoost,0.9624,0.955,0.9706,0.9627,0.9938,75468,3618,2327,76758
+LightGBM,0.9574,0.9466,0.9694,0.9579,0.9923,74764,4322,2417,76668
