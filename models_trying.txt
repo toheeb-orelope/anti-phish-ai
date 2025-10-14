@@ -17,3 +17,71 @@ Plot ROC curves for other models (e.g., XGBoost, LightGBM, SVM) and compare AUC 
 
 Calibration:
 Consider probability calibration (CalibratedClassifierCV) to ensure confidence scores match reality.
+
+Result of XAI[C:\Users\tohee\miniconda3\envs\pytorch_env\Lib\site-packages\shap\explainers\_tree.py:583: UserWarning: LightGBM binary classifier with TreeExplainer shap values output has changed to a list of ndarray
+  warnings.warn(
+
+=== XAI RESULT ===
+URL: http://paypal-secure-login.verify-account123.com/login?user=abc&token=XYZ1234567890
+Verdict: Benign
+Confidence: 0.551
+Model breakdown: {'rf': 0.017, 'xgb': 0.019, 'lgbm': 0.036, 'cnn': 0.5, 'lstm': 0.759, 'ffnn': 0.5}
+Top reasons:
+ 1. Model focused on “http:/”
+ 2. Model focused on “.”
+ 3. num_subdirs strongly influenced the decision
+ 4. No HTTPS detected
+
+JSON: {
+  "url": "http://paypal-secure-login.verify-account123.com/login?user=abc&token=XYZ1234567890",
+  "verdict": "Benign",
+  "confidence": 0.551,
+  "model_breakdown": {
+    "rf": 0.016666666666666666,
+    "xgb": 0.01872897334396839,
+    "lgbm": 0.03579102149265548,
+    "cnn": 0.5,
+    "lstm": 0.7590519785881042,
+    "ffnn": 0.5
+  },
+  "reasons": [
+    "Model focused on \u201chttp:/\u201d",
+    "rf": 0.016666666666666666,
+    "xgb": 0.01872897334396839,
+    "lgbm": 0.03579102149265548,
+    "cnn": 0.5,
+    "lstm": 0.7590519785881042,
+    "ffnn": 0.5
+    "rf": 0.016666666666666666,
+    "xgb": 0.01872897334396839,
+    "lgbm": 0.03579102149265548,
+    "cnn": 0.5,
+    "lstm": 0.7590519785881042,
+    "rf": 0.016666666666666666,
+    "xgb": 0.01872897334396839,
+    "lgbm": 0.03579102149265548,
+    "cnn": 0.5,
+    "rf": 0.016666666666666666,
+    "xgb": 0.01872897334396839,
+    "lgbm": 0.03579102149265548,
+    "rf": 0.016666666666666666,
+    "xgb": 0.01872897334396839,
+    "lgbm": 0.03579102149265548,
+    "cnn": 0.5,
+    "rf": 0.016666666666666666,
+    "xgb": 0.01872897334396839,
+    "lgbm": 0.03579102149265548,
+    "rf": 0.016666666666666666,
+    "xgb": 0.01872897334396839,
+    "lgbm": 0.03579102149265548,
+    "cnn": 0.5,
+    "lstm": 0.7590519785881042,
+    "ffnn": 0.5
+  },
+  "reasons": [
+    "Model focused on \u201chttp:/\u201d",
+    "Model focused on \u201c.\u201d",
+    "num_subdirs strongly influenced the decision",
+    "No HTTPS detected"
+  ]
+}]
