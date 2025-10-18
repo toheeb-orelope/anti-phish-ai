@@ -12,3 +12,6 @@ models/*.pkl
 models/*.npy
 models/*.csv
 models/*.ckpt
+models/*.xlsx
+models/*.txt
+models/*.log

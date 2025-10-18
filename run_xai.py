@@ -21,6 +21,8 @@ from phishin_train_cnn import LightningCNN
 from phishin_nlp_lstm import LightningLSTM
 from phishin_train_ffnn import LightningFFNN
 
+THRESHOLD = 0.6029  # from rebalancing_hybri.py
+
 # -------------------------
 # Config
 # -------------------------
@@ -222,7 +224,7 @@ def tree_predict_prob(model, x_row: pd.DataFrame) -> float:
             return float(p[0])
     except Exception as e:
         logging.warning(f"tree_predict_prob error: {e}")
-    return 0.5
+    return THRESHOLD
 
 
 # working version
@@ -230,7 +232,7 @@ def tree_predict_prob(model, x_row: pd.DataFrame) -> float:
 
 def deep_predict_prob(model, url: str, max_len=200) -> float:
     if model is None:
-        return 0.5
+        return THRESHOLD
     s = str(url)[:max_len].ljust(max_len)
     idxs = torch.tensor(
         [min(ord(c), 127) for c in s], dtype=torch.long, device=DEVICE
@@ -263,7 +265,7 @@ def deep_predict_prob(model, url: str, max_len=200) -> float:
 
     except Exception as e:
         logging.warning(f"deep_predict_prob error: {e}")
-    return 0.5
+    return THRESHOLD
 
 
 def get_tree_columns(model):
@@ -447,27 +449,27 @@ def run_example(url: str):
             probs["rf"] = tree_predict_prob(_TREE_MODELS["rf"], x_row)
     except Exception as e:
         logging.warning(f"RF inference failed: {e}")
-        probs["rf"] = 0.5
+        probs["rf"] = THRESHOLD
 
     try:
         if _TREE_MODELS.get("xgb") is not None:
             probs["xgb"] = tree_predict_prob(_TREE_MODELS["xgb"], x_row)
     except Exception as e:
         logging.warning(f"XGB inference failed: {e}")
-        probs["xgb"] = 0.5
+        probs["xgb"] = THRESHOLD
 
     try:
         if _TREE_MODELS.get("lgbm") is not None:
             probs["lgbm"] = tree_predict_prob(_TREE_MODELS["lgbm"], x_row)
     except Exception as e:
         logging.warning(f"LGBM inference failed: {e}")
-        probs["lgbm"] = 0.5
+        probs["lgbm"] = THRESHOLD
 
     # --- Deep models (handled separately) ---
     # Defaults (in case a model is missing or fails)
-    probs.setdefault("cnn", 0.5)
-    probs.setdefault("ffnn", 0.5)
-    probs.setdefault("lstm", 0.5)
+    probs.setdefault("cnn", THRESHOLD)
+    probs.setdefault("ffnn", THRESHOLD)
+    probs.setdefault("lstm", THRESHOLD)
 
     # Helper: float encoding for CNN/FFNN
     def _encode_float(url_str: str, max_len: int = 200):
@@ -584,8 +586,8 @@ def run_example(url: str):
     tree_vals = [probs[k] for k in ("rf", "xgb", "lgbm") if k in probs]
     deep_vals = [probs[k] for k in ("cnn", "ffnn", "lstm") if k in probs]
 
-    tree_mean = float(np.mean(tree_vals)) if tree_vals else 0.5
-    deep_mean = float(np.mean(deep_vals)) if deep_vals else 0.5
+    tree_mean = float(np.mean(tree_vals)) if tree_vals else THRESHOLD
+    deep_mean = float(np.mean(deep_vals)) if deep_vals else THRESHOLD
     hybrid_score = 0.6 * tree_mean + 0.4 * deep_mean
     probs["hybrid"] = float(hybrid_score)
 
@@ -612,6 +614,7 @@ def run_example(url: str):
     )
 
     # Dev print
+    """
     print("\n=== XAI RESULT ===")
     print("URL:", result["url"])
     print("Verdict:", result["verdict"])
@@ -623,7 +626,7 @@ def run_example(url: str):
     print("Top reasons:")
     for i, r in enumerate(result["reasons"], 1):
         print(f" {i}. {r}")
-
+    """
     # Sanitized log
     safe = sanitize_url_for_log(url)
     logging.info(f"{safe} -> {result['verdict']} ({result['confidence']})")
@@ -631,6 +634,7 @@ def run_example(url: str):
     # -------------------------
     # 7) Save ensemble probabilities (append)
     # -------------------------
+    """
     try:
         ensemble_path = "models/ensemble_probs.npy"
         prob_values = np.array(
@@ -649,6 +653,7 @@ def run_example(url: str):
         print(f"✅ Ensemble probabilities saved to {ensemble_path}")
     except Exception as e:
         print(f"[WARN] Could not save ensemble probabilities: {e}")
+        """
 
     return result
 

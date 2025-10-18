@@ -1,3 +1,4 @@
+"""
 import torch
 from phishin_train_cnn import LightningCNN
 from phishin_train_ffnn import LightningFFNN
@@ -32,3 +33,15 @@ with torch.no_grad():
 
 print(f"✅ CNN output:  {cnn_out.item():.4f}")
 print(f"✅ FFNN output: {ffnn_out.item():.4f}")
+"""
+
+import numpy as np
+import pandas as pd
+
+probs = np.load("models/ensemble_probs.npy", allow_pickle=True)
+print("Shape:", probs.shape)
+print(
+    pd.DataFrame(
+        probs[:5], columns=["rf", "xgb", "lgbm", "cnn", "ffnn", "lstm", "hybrid"]
+    )
+)

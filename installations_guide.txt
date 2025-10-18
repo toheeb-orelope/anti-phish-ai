@@ -1,0 +1,2 @@
+FastAPI: pip3 install "fastapi[all]"
+run in the terminal uvicorn main:app --reload
