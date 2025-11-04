@@ -25,3 +25,54 @@ model/*.ckpt
 model/*.xlsx
 model/*.txt
 model/*.log
+
+
+
+
+# ===========================
+#  Anti-Phish-AI Git Ignore
+# ===========================
+
+# Python cache and compiled files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pkl
+*.log
+
+# Virtual environments
+venv/
+env/
+*.egg-info/
+.pytorch_env/
+.idea/
+.vscode/
+
+# Datasets and processed data
+data/
+datasets/
+*.csv
+*.json
+*.xlsx
+
+# Models and checkpoints
+model/
+models/
+checkpoints/
+*.h5
+*.pt
+*.pth
+
+# Plots, outputs, and reports
+plots/
+outputs/
+reports/
+*.png
+*.jpg
+*.svg
+*.pdf
+
+# OS files
+.DS_Store
+Thumbs.db
