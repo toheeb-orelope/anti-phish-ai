@@ -7,9 +7,9 @@ from explain_dl_with_captumIG import top_substrings_ig
 from decision_making import feature_reason, substr_reason
 
 
-rf_model = "models/random_forest.pkl"
-xgb_model = "models/xgboost_model.pkl"
-lgbm_model = "models/lightgbm_model.pkl"
+rf_model = "model/rf_calibrated.pkl"
+xgb_model = "model/xgb_calibrated.pkl"
+lgbm_model = "model/lgbm_calibrated.pkl"
 cnn_model = "models/cnn_best.ckpt"
 lstm_model = "models/lstm_best.ckpt"
 ffnn_model = "models/ffnn_best.ckpt"
@@ -23,6 +23,8 @@ def make_plain_english(
     tree_columns=None,
     deep_model=None,
     max_reasons=4,
+    threshold: float | None = None,
+    final_prob_override: float | None = None,
 ):
     feats = extract_features(url)
 
@@ -30,9 +32,13 @@ def make_plain_english(
 
     # 1) Tree reasons (if available)
     if tree_model is not None and tree_columns is not None:
-        x_row = pd.DataFrame([{k: feats[k] for k in tree_columns}])[tree_columns]
+        # Use default 0 for any missing feature names to avoid KeyErrors
+        x_row = pd.DataFrame([{k: feats.get(k, 0) for k in tree_columns}])[tree_columns]
         contribs = explain_tree_sample(tree_model, x_row, max_reasons=max_reasons)
         for fname, shap_val in contribs:
+            # Skip unknown placeholder features to avoid KeyErrors
+            if fname not in x_row.columns:
+                continue
             msg, tilt = feature_reason(fname, x_row.iloc[0][fname], shap_val)
             reasons.append((abs(shap_val), msg, tilt))
 
@@ -55,20 +61,26 @@ def make_plain_english(
         if len(final_msgs) >= max_reasons:
             break
 
-    # 4) Decision & confidence (you can plug your ensemble here)
-    # e.g., weighted average of model probabilities:
-    weights = {"lstm": 0.35, "cnn": 0.25, "lgbm": 0.2, "rf": 0.1, "ffnn": 0.1}
-    num = sum(weights.get(k, 0.0) * v for k, v in probs.items())
-    den = sum(weights.get(k, 0.0) for k in probs.keys())
-    final_prob = num / den if den > 0 else np.mean(list(probs.values()))
-    verdict = "Phishing" if final_prob >= 0.5 else "Benign"
+    # 4) Decision & confidence
+    # Use override and/or threshold if provided to align with calibrated pipeline
+    if final_prob_override is not None:
+        final_prob = float(final_prob_override)
+    else:
+        # fallback to weighted average of model probabilities
+        weights = {"lstm": 0.35, "cnn": 0.25, "lgbm": 0.2, "rf": 0.1, "ffnn": 0.1}
+        num = sum(weights.get(k, 0.0) * v for k, v in probs.items())
+        den = sum(weights.get(k, 0.0) for k in probs.keys())
+        final_prob = num / den if den > 0 else np.mean(list(probs.values()))
+
+    thr = 0.5 if threshold is None else float(threshold)
+    verdict = "Phishing" if final_prob >= thr else "Benign"
     confidence = float(final_prob if verdict == "Phishing" else 1 - final_prob)
 
     return {
         "url": url,
         "verdict": verdict,
         "confidence": round(confidence, 3),
-        "final_prob": round(float(final_prob), 4),  # <-- Added line
+        "final_prob": round(float(final_prob), 4),
         "model_breakdown": probs,
         "reasons": final_msgs
         or ["Model confidence exceeded threshold based on learned patterns."],

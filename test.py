@@ -5,14 +5,14 @@ import numpy as np
 
 # print(type(data))
 # print(data)
-from phishin_train_cnn import LightningCNN
-import torch
+# from phishin_train_cnn import LightningCNN
+# import torch
 
-model = LightningCNN.load_from_checkpoint(
-    "models/cnn_lightning.ckpt", map_location="cpu"
-)
-model.eval()
-print("✅ CNN loaded successfully")
+# model = LightningCNN.load_from_checkpoint(
+#     "models/cnn_lightning.ckpt", map_location="cpu"
+# )
+# model.eval()
+# print("✅ CNN loaded successfully")
 
 
 # Retrain LightGBM with numeric 'tld' column
@@ -98,13 +98,113 @@ print("\n✅ LightGBM retrained successfully with numeric 'tld' column.")
 """
 
 
-import pandas as pd
-from run_xai import run_example
+# import pandas as pd
+# from run_xai import run_example
 
-test = pd.read_csv("data/processed/test.csv")
+# test = pd.read_csv("data/processed/test.csv")
 
-for url in test["url"].head(200):  # or full dataset
-    try:
-        run_example(url)
-    except Exception as e:
-        print("Error:", e)
+# for url in test["url"].head(200):  # or full dataset
+#     try:
+#         run_example(url)
+#     except Exception as e:
+#         print("Error:", e)
+
+"""
+import joblib, os
+
+path_in = "model/xgb_calibrated.pkl"
+path_out = "model/xgb_fixed_for_shap.pkl"
+
+data = joblib.load(path_in)
+print("Loaded:", type(data))
+print("Keys:", list(data.keys()))
+
+# --- Extract models depending on structure ---
+base_model = None
+calibrated = None
+
+if isinstance(data, dict):
+    # Your file contains {'xgb': model, 'calibrator': calibrator}
+    base_model = data.get("xgb", None)
+    calibrator = data.get("calibrator", None)
+    calibrated = calibrator  # optional, for naming consistency
+else:
+    calibrated = data
+    if hasattr(data, "base_estimator_"):
+        base_model = data.base_estimator_
+    elif hasattr(data, "calibrated_classifiers_"):
+        base_model = data.calibrated_classifiers_[0].estimator
+    elif hasattr(data, "_get_estimator"):
+        base_model = data._get_estimator()
+
+if base_model is None:
+    raise RuntimeError("Unable to locate base model inside xgb_calibrated.pkl")
+
+print("Base model:", type(base_model))
+
+# --- Save unified structure for SHAP and inference ---
+joblib.dump({"calibrated": calibrated, "base": base_model}, path_out)
+print(f"[+] Re-saved to {path_out}")
+"""
+
+
+# Checking the features in the trained models
+
+import joblib
+import os
+
+# List of your model files
+MODEL_PATHS = {
+    "Random Forest": "model/rf_calibrated.pkl",
+    "XGBoost": "model/xgb_calibrated.pkl",
+    "LightGBM": "model/lgbm_calibrated.pkl",
+}
+
+
+def load_inner_model(data):
+    """Safely extract the actual model object (handles dicts, calibrated, or direct models)."""
+    if isinstance(data, dict):
+        # Dictionary structure: {"xgb": model, "calibrator": calibrator}, etc.
+        for key in ["xgb", "rf", "lgbm", "base"]:
+            if key in data:
+                return data[key]
+        print("⚠️ No recognizable model key found in dict.")
+        return None
+
+    # CalibratedClassifierCV or plain model
+    if hasattr(data, "base_estimator_"):
+        return data.base_estimator_
+    elif hasattr(data, "calibrated_classifiers_"):
+        return data.calibrated_classifiers_[0].estimator
+    elif hasattr(data, "_get_estimator"):
+        return data._get_estimator()
+    else:
+        return data
+
+
+def print_feature_names(model_name, model_path):
+    """Load model and print its feature names."""
+    if not os.path.exists(model_path):
+        print(f"❌ {model_name} model not found at {model_path}")
+        return
+
+    data = joblib.load(model_path)
+    model = load_inner_model(data)
+
+    print(f"\n🔍 {model_name} Feature Names:")
+    if model is None:
+        print("⚠️ Unable to extract model object.")
+        return
+
+    if hasattr(model, "feature_names_in_"):
+        print("✅ Feature names found:")
+        print(model.feature_names_in_)
+    else:
+        print(
+            "⚠️ No feature names found (possibly trained on NumPy arrays or older sklearn)."
+        )
+
+
+# --- Run for all three models ---
+for name, path in MODEL_PATHS.items():
+    print_feature_names(name, path)

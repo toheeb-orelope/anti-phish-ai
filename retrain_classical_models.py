@@ -1,143 +1,119 @@
-import pandas as pd
-import joblib
-import numpy as np
-from sklearn.ensemble import RandomForestClassifier
-from xgboost import XGBClassifier
-from lightgbm import LGBMClassifier
-from sklearn.metrics import (
-    accuracy_score,
-    precision_score,
-    recall_score,
-    f1_score,
-    confusion_matrix,
-    roc_auc_score,
-    roc_curve,
+"""
+diagnose_models.py
+------------------
+Comprehensive diagnostic script for phishing_detection project.
+Checks dataset balance, feature consistency, deep model output shape,
+and threshold alignment. Summarises likely causes of inconsistent predictions.
+"""
+
+import os, json, torch, pandas as pd
+from run_xai import (
+    extract_features,
+    _TREE_MODELS,
+    _DEEP_MODELS,
+    get_tree_columns,
+    _load_model_threshold,
 )
-from sklearn.preprocessing import LabelEncoder
-import os
 
-# -------------------------------
-# Step 1: Load train and test datasets
-# -------------------------------
-train = pd.read_csv("data/processed/train.csv")
-test = pd.read_csv("data/processed/test.csv")
+print("=== 🔍 Phishing Detection Diagnostic ===\n")
 
-FEATURE_COLUMNS = [
-    "url_length",
-    "domain_length",
-    "num_dots",
-    "num_hyphens",
-    "num_at",
-    "num_question",
-    "num_equals",
-    "num_digits",
-    "num_subdirs",
-    "has_https",
-    "tld",
-]
+summary = []
 
-X_train = train[FEATURE_COLUMNS].copy()
-y_train = train["label"]
-X_test = test[FEATURE_COLUMNS].copy()
-y_test = test["label"]
+# ---------------------------
+# 1️⃣ Dataset balance check
+# ---------------------------
+try:
+    train_path = "data/processed/train.csv"
+    if not os.path.exists(train_path):
+        raise FileNotFoundError(train_path)
+    train = pd.read_csv(train_path)
+    balance = train["label"].value_counts(normalize=True).to_dict()
+    print("[✔] Dataset loaded:", train.shape)
+    print("[ℹ] Label distribution:")
+    for k, v in balance.items():
+        print(f"  Label {k}: {v*100:.2f}%")
+    if abs(balance.get(0, 0) - balance.get(1, 0)) > 0.1:
+        summary.append("⚠ Dataset appears imbalanced (>10% difference). Consider rebalancing.")
+except Exception as e:
+    summary.append(f"❌ Could not check dataset balance: {e}")
 
-# -------------------------------
-# Step 2: Encode the TLD column (string → number)
-# -------------------------------
-print("🔹 Encoding 'tld' feature...")
+print("\n" + "-" * 60 + "\n")
 
-label_encoder = LabelEncoder()
-all_tlds = pd.concat([X_train["tld"], X_test["tld"]]).astype(str)
-label_encoder.fit(all_tlds)
+# ---------------------------
+# 2️⃣ Feature consistency check
+# ---------------------------
+try:
+    feats = extract_features("https://northampton.ac.uk/")
+    print(f"[✔] Extracted {len(feats)} features from test URL.")
+    ref_model = _TREE_MODELS.get("lgbm") or _TREE_MODELS.get("xgb") or _TREE_MODELS.get("rf")
+    if ref_model is not None:
+        model_features = get_tree_columns(ref_model)
+        print(f"[ℹ] Model expects {len(model_features)} features.")
+        missing = set(model_features) - set(feats.keys())
+        extra = set(feats.keys()) - set(model_features)
+        if missing:
+            print(f"⚠ Missing features: {missing}")
+            summary.append("⚠ Feature mismatch detected: model trained on different feature schema.")
+        if extra:
+            print(f"⚠ Extra features: {extra}")
+    else:
+        summary.append("⚠ No tree model loaded to compare features.")
+except Exception as e:
+    summary.append(f"❌ Could not verify feature consistency: {e}")
 
-X_train["tld"] = label_encoder.transform(X_train["tld"].astype(str))
-X_test["tld"] = label_encoder.transform(X_test["tld"].astype(str))
+print("\n" + "-" * 60 + "\n")
 
-# Optional: Save encoder for later use (so new URLs can be encoded consistently)
-joblib.dump(label_encoder, "models/tld_encoder.pkl")
+# ---------------------------
+# 3️⃣ Deep model output shape
+# ---------------------------
+try:
+    print("[ℹ] Deep model output shapes:")
+    for k, m in _DEEP_MODELS.items():
+        if m is not None:
+            sample = torch.randn(1, 200) if k != "lstm" else torch.randint(0, 128, (1, 200))
+            with torch.no_grad():
+                out = m(sample)
+            print(f"  {k:5}: output shape -> {tuple(out.shape)}")
+            if out.ndim == 1 or (out.ndim == 2 and out.shape[1] not in (1, 2)):
+                summary.append(f"⚠ {k} output shape {tuple(out.shape)} unusual; check final layer dimensions.")
+        else:
+            print(f"  {k:5}: model not loaded.")
+except Exception as e:
+    summary.append(f"❌ Deep model output check failed: {e}")
 
-# -------------------------------
-# Step 3: Train models
-# -------------------------------
-print("🔹 Training RandomForest...")
-rf = RandomForestClassifier(n_estimators=200, random_state=42)
-rf.fit(X_train, y_train)
-joblib.dump(rf, "models/random_forest.pkl")
-print("✅ Saved models/random_forest.pkl")
+print("\n" + "-" * 60 + "\n")
 
-print("🔹 Training XGBoost...")
-xgb = XGBClassifier(use_label_encoder=False, eval_metric="logloss", random_state=42)
-xgb.fit(X_train, y_train)
-joblib.dump(xgb, "models/xgboost_model.pkl")
-print("✅ Saved models/xgboost_model.pkl")
+# ---------------------------
+# 4️⃣ Threshold alignment check
+# ---------------------------
+try:
+    thresholds_path = "model/thresholds.json"
+    if not os.path.exists(thresholds_path):
+        summary.append("⚠ thresholds.json missing. Thresholds may not match models.")
+    else:
+        with open(thresholds_path) as f:
+            t = json.load(f)
+        print("[ℹ] Thresholds loaded from model/thresholds.json:")
+        for k in ("rf", "xgb", "lgbm", "cnn", "ffnn", "lstm", "hybrid"):
+            val = _load_model_threshold(k, 0.5)
+            print(f"  {k:6}: {val}")
+        # simple sanity check
+        if any(val < 0.3 or val > 0.7 for val in t.get("rf", {}).values()):
+            summary.append("⚠ Some thresholds may be too extreme (<0.3 or >0.7). Recalculate on validation data.")
+except Exception as e:
+    summary.append(f"❌ Could not check thresholds: {e}")
 
-print("🔹 Training LightGBM...")
-lgbm = LGBMClassifier(random_state=42)
-lgbm.fit(X_train, y_train)
-joblib.dump(lgbm, "models/lightgbm_model.pkl")
-print("✅ Saved models/lightgbm_model.pkl")
+print("\n" + "-" * 60 + "\n")
 
-# -------------------------------
-# Step 4: Evaluate models on test set
-# -------------------------------
-results = []
+# ---------------------------
+# 5️⃣ Final summary
+# ---------------------------
+print("=== 🧭 Diagnostic Summary ===")
+if not summary:
+    print("✅ No major issues detected. Models and data look consistent.")
+else:
+    for s in summary:
+        print("-", s)
 
-for name, model in [("RandomForest", rf), ("XGBoost", xgb), ("LightGBM", lgbm)]:
-    print(f"\n📊 Evaluating {name}...")
-
-    y_pred = model.predict(X_test)
-    y_prob = (
-        model.predict_proba(X_test)[:, 1]
-        if hasattr(model, "predict_proba")
-        else np.zeros_like(y_pred)
-    )
-
-    acc = accuracy_score(y_test, y_pred)
-    prec = precision_score(y_test, y_pred)
-    rec = recall_score(y_test, y_pred)
-    f1 = f1_score(y_test, y_pred)
-    roc = roc_auc_score(y_test, y_prob)
-    tn, fp, fn, tp = confusion_matrix(y_test, y_pred).ravel()
-
-    results.append(
-        {
-            "Model": name,
-            "Accuracy": round(acc, 4),
-            "Precision": round(prec, 4),
-            "Recall": round(rec, 4),
-            "F1_Score": round(f1, 4),
-            "ROC_AUC": round(roc, 4),
-            "True_Negative": tn,
-            "False_Positive": fp,
-            "False_Negative": fn,
-            "True_Positive": tp,
-        }
-    )
-
-    print(f"{name} Accuracy: {acc:.4f}")
-    print(f"{name} ROC AUC: {roc:.4f}")
-    print("Confusion Matrix:")
-    print(confusion_matrix(y_test, y_pred))
-
-    # Save ROC curve points
-    fpr, tpr, _ = roc_curve(y_test, y_prob)
-    np.save(f"models/{name.lower()}_roc.npy", {"fpr": fpr, "tpr": tpr})
-
-# -------------------------------
-# Step 5: Save metrics to CSV
-# -------------------------------
-os.makedirs("models", exist_ok=True)
-df_results = pd.DataFrame(results)
-df_results.to_csv("models/model_performance.csv", index=False)
-print("\n✅ Saved metrics to models/model_performance.csv")
-
-# -------------------------------
-# Step 6: Summary
-# -------------------------------
-print("\nSummary of Model Performance:")
-print(df_results)
-
-print("\n✅ Feature alignment check:")
-print("RandomForest features:", rf.feature_names_in_)
-print("XGBoost features:", xgb.feature_names_in_)
-print("LightGBM features:", lgbm.feature_name_)
+print("\nTip: Fix warnings in order of appearance above for best results.")
+print("=============================================================\n")

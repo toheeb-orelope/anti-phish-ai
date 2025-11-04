@@ -35,13 +35,23 @@ print(f"✅ CNN output:  {cnn_out.item():.4f}")
 print(f"✅ FFNN output: {ffnn_out.item():.4f}")
 """
 
-import numpy as np
-import pandas as pd
+# import numpy as np
+# import pandas as pd
 
-probs = np.load("models/ensemble_probs.npy", allow_pickle=True)
-print("Shape:", probs.shape)
-print(
-    pd.DataFrame(
-        probs[:5], columns=["rf", "xgb", "lgbm", "cnn", "ffnn", "lstm", "hybrid"]
-    )
-)
+# probs = np.load("models/ensemble_probs.npy", allow_pickle=True)
+# print("Shape:", probs.shape)
+# print(
+#     pd.DataFrame(
+#         probs[:5], columns=["rf", "xgb", "lgbm", "cnn", "ffnn", "lstm", "hybrid"]
+#     )
+# )
+
+
+# regenerate dataset once
+from extract_features import extract_features
+import json
+
+url = "https://paypal.com/login"
+feats = extract_features(url)
+print(json.dumps(feats, indent=2))
+print("\nKeys count:", len(feats.keys()))

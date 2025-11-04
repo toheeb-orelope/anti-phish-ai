@@ -6,27 +6,29 @@ from fastapi import Request, HTTPException, status
 # Basic in-memory rate limiting
 # -------------------------
 RATE_LIMIT = {}
-MAX_REQUESTS = 10  # allowed requests
+# Allow a higher burst rate to support browser extension scans
+MAX_REQUESTS = 60  # allowed requests per window
 WINDOW_SECONDS = 60  # per time window (seconds)
 
 
 async def rate_limiter(request: Request):
-    """Simple per-IP rate limiting using in-memory dict."""
-    client_ip = request.client.host
+    """Simple per-API-key rate limiting (fallback to client IP)."""
+    # Prefer API key if provided, so users are isolated.
+    api_key = request.headers.get("x-api-key") or request.headers.get("X-API-Key")
+    identifier = api_key if api_key else (request.client.host if request.client else "unknown")
+
     now = time.time()
 
-    if client_ip not in RATE_LIMIT:
-        RATE_LIMIT[client_ip] = []
+    if identifier not in RATE_LIMIT:
+        RATE_LIMIT[identifier] = []
 
     # keep only requests within the window
-    RATE_LIMIT[client_ip] = [
-        t for t in RATE_LIMIT[client_ip] if now - t < WINDOW_SECONDS
-    ]
+    RATE_LIMIT[identifier] = [t for t in RATE_LIMIT[identifier] if now - t < WINDOW_SECONDS]
 
-    if len(RATE_LIMIT[client_ip]) >= MAX_REQUESTS:
+    if len(RATE_LIMIT[identifier]) >= MAX_REQUESTS:
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             detail="Too many requests. Please wait a minute before retrying.",
         )
 
-    RATE_LIMIT[client_ip].append(now)
+    RATE_LIMIT[identifier].append(now)

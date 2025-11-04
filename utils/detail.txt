@@ -1,0 +1,27 @@
+How To Run
+
+Start server: uvicorn endpoint:app --host 127.0.0.1 --port 8000 --reload
+Test quickly:
+POST http://127.0.0.1:8000/signup with username/password
+POST http://127.0.0.1:8000/login → copy api_key
+POST http://127.0.0.1:8000/predict with headers: X-API-Key: <api_key>, JSON body { "url": "https://example.com" }
+Browser Extension Integration
+
+Manifest V3: add host permissions and storage
+Example:
+"host_permissions": ["http://127.0.0.1:8000/*", "http://localhost:8000/*"]
+"permissions": ["storage"]
+Login (service worker or background):
+Use fetch to obtain and store the API key
+fetch("http://127.0.0.1:8000/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username, password }) })
+Save api_key to chrome.storage.local
+Predict with header:
+Retrieve api_key from storage and call
+fetch("http://127.0.0.1:8000/predict", { method: "POST", headers: { "Content-Type": "application/json", "X-API-Key": apiKey }, body: JSON.stringify({ url }) })
+CORS: enabled with allow_origins=["*"] for local use, so calls from the extension or a local UI work.
+Files Touched
+
+endpoint.py (line 1) – adds CORS + /signup, /login, /me
+utils/fastapi_security.py (line 1) – verifies X-API-Key from user store
+utils/response_schemas.py (line 1) – adds SignupRequest, LoginRequest, LoginResponse
+utils/user_store.py (line 1) – new user storage and helpers

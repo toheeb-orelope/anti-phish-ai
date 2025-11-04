@@ -21,3 +21,21 @@ class URLResponse(BaseModel):
     threshold_used: float
     reasons: List[str]
     model_breakdown: Dict[str, float]
+
+
+# -------------------------
+# Auth schemas
+# -------------------------
+class SignupRequest(BaseModel):
+    username: str
+    password: str
+
+
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
+
+class LoginResponse(BaseModel):
+    username: str
+    api_key: str

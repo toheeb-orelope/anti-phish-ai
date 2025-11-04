@@ -1,0 +1,156 @@
+python -c "from run_xai import run_rf_only; run_rf_only('https://northampton.ac.uk/')"
+python -c "from run_xai import run_xgb_only; run_xgb_only('https://northampton.ac.uk/')"
+python -c "from run_xai import run_lgbm_only; run_lgbm_only('https://northampton.ac.uk/')"
+python -c "from run_xai import run_cnn_only; run_cnn_only('https://northampton.ac.uk/')"
+python -c "from run_xai import run_ffnn_only; run_ffnn_only('https://northampton.ac.uk/')"
+python -c "from run_xai import run_lstm_only; run_lstm_only('https://northampton.ac.uk/')"
+[*] Feature Extraction Mode: FAST (Offline trust only)
+[*] Loaded offline domain cache (460,631 domains)
+[INFO] CNN model loaded on cuda
+[INFO] FFNN model loaded on cuda
+[INFO] LSTM model loaded on CPU (CuDNN disabled)
+[DEBUG] Models preloaded at import time:
+  Tree: ['rf', 'xgb', 'lgbm']
+  Deep: ['cnn', 'ffnn', 'lstm']
+
+URL: https://northampton.ac.uk/
+RF Probability: 0.858 → Phishing
+[*] Feature Extraction Mode: FAST (Offline trust only)
+[*] Loaded offline domain cache (460,631 domains)
+[INFO] CNN model loaded on cuda
+[INFO] FFNN model loaded on cuda
+[INFO] LSTM model loaded on CPU (CuDNN disabled)
+[DEBUG] Models preloaded at import time:
+  Tree: ['rf', 'xgb', 'lgbm']
+  Deep: ['cnn', 'ffnn', 'lstm']
+
+URL: https://northampton.ac.uk/
+XGB Probability: 0.335 → Legitimate
+[*] Feature Extraction Mode: FAST (Offline trust only)
+[*] Loaded offline domain cache (460,631 domains)
+[INFO] CNN model loaded on cuda
+[INFO] FFNN model loaded on cuda
+[INFO] LSTM model loaded on CPU (CuDNN disabled)
+[DEBUG] Models preloaded at import time:
+  Tree: ['rf', 'xgb', 'lgbm']
+  Deep: ['cnn', 'ffnn', 'lstm']
+
+URL: https://northampton.ac.uk/
+LGBM Probability: 0.896 → Phishing
+[*] Feature Extraction Mode: FAST (Offline trust only)
+[*] Loaded offline domain cache (460,631 domains)
+[INFO] CNN model loaded on cuda
+[INFO] FFNN model loaded on cuda
+[INFO] LSTM model loaded on CPU (CuDNN disabled)
+[DEBUG] Models preloaded at import time:
+  Tree: ['rf', 'xgb', 'lgbm']
+  Deep: ['cnn', 'ffnn', 'lstm']
+WARNING:root:deep_predict_prob error: tuple index out of range
+
+URL: https://northampton.ac.uk/
+CNN Probability: 0.500 → Phishing
+[*] Feature Extraction Mode: FAST (Offline trust only)
+[*] Loaded offline domain cache (460,631 domains)
+[INFO] CNN model loaded on cuda
+[INFO] FFNN model loaded on cuda
+[INFO] LSTM model loaded on CPU (CuDNN disabled)
+[DEBUG] Models preloaded at import time:
+  Tree: ['rf', 'xgb', 'lgbm']
+  Deep: ['cnn', 'ffnn', 'lstm']
+WARNING:root:deep_predict_prob error: tuple index out of range
+
+URL: https://northampton.ac.uk/
+FFNN Probability: 0.500 → Legitimate
+[*] Feature Extraction Mode: FAST (Offline trust only)
+[*] Loaded offline domain cache (460,631 domains)
+[INFO] CNN model loaded on cuda
+[INFO] FFNN model loaded on cuda
+[INFO] LSTM model loaded on CPU (CuDNN disabled)
+[DEBUG] Models preloaded at import time:
+  Tree: ['rf', 'xgb', 'lgbm']
+  Deep: ['cnn', 'ffnn', 'lstm']
+WARNING:root:deep_predict_prob error: tuple index out of range
+
+URL: https://northampton.ac.uk/
+LSTM Probability: 0.500 → Phishing
+
+
+
+
+
+
+python -c "from run_xai import run_rf_only; run_rf_only('http://paypal-secure-login.verify-account123.com/login?user=abc&token=XYZ1234567890')"
+python -c "from run_xai import run_xgb_only; run_xgb_only('http://paypal-secure-login.verify-account123.com/login?user=abc&token=XYZ1234567890')"
+python -c "from run_xai import run_lgbm_only; run_lgbm_only('http://paypal-secure-login.verify-account123.com/login?user=abc&token=XYZ1234567890')"
+python -c "from run_xai import run_cnn_only; run_cnn_only('http://paypal-secure-login.verify-account123.com/login?user=abc&token=XYZ1234567890')"
+python -c "from run_xai import run_ffnn_only; run_ffnn_only('http://paypal-secure-login.verify-account123.com/login?user=abc&token=XYZ1234567890')"
+python -c "from run_xai import run_lstm_only; run_lstm_only('http://paypal-secure-login.verify-account123.com/login?user=abc&token=XYZ1234567890')"
+[*] Feature Extraction Mode: FAST (Offline trust only)
+[*] Loaded offline domain cache (460,631 domains)
+[INFO] CNN model loaded on cuda
+[INFO] FFNN model loaded on cuda
+[INFO] LSTM model loaded on CPU (CuDNN disabled)
+[DEBUG] Models preloaded at import time:
+  Tree: ['rf', 'xgb', 'lgbm']
+  Deep: ['cnn', 'ffnn', 'lstm']
+
+URL: http://paypal-secure-login.verify-account123.com/login?user=abc&token=XYZ1234567890
+RF Probability: 0.911 → Phishing
+[*] Feature Extraction Mode: FAST (Offline trust only)
+[*] Loaded offline domain cache (460,631 domains)
+[INFO] CNN model loaded on cuda
+[INFO] FFNN model loaded on cuda
+[INFO] LSTM model loaded on CPU (CuDNN disabled)
+[DEBUG] Models preloaded at import time:
+  Tree: ['rf', 'xgb', 'lgbm']
+  Deep: ['cnn', 'ffnn', 'lstm']
+
+URL: http://paypal-secure-login.verify-account123.com/login?user=abc&token=XYZ1234567890
+XGB Probability: 0.335 → Legitimate
+[*] Feature Extraction Mode: FAST (Offline trust only)
+[*] Loaded offline domain cache (460,631 domains)
+[INFO] CNN model loaded on cuda
+[INFO] FFNN model loaded on cuda
+[INFO] LSTM model loaded on CPU (CuDNN disabled)
+[DEBUG] Models preloaded at import time:
+  Tree: ['rf', 'xgb', 'lgbm']
+  Deep: ['cnn', 'ffnn', 'lstm']
+
+URL: http://paypal-secure-login.verify-account123.com/login?user=abc&token=XYZ1234567890
+LGBM Probability: 0.993 → Phishing
+[*] Feature Extraction Mode: FAST (Offline trust only)
+[*] Loaded offline domain cache (460,631 domains)
+[INFO] CNN model loaded on cuda
+[INFO] FFNN model loaded on cuda
+[INFO] LSTM model loaded on CPU (CuDNN disabled)
+[DEBUG] Models preloaded at import time:
+  Tree: ['rf', 'xgb', 'lgbm']
+  Deep: ['cnn', 'ffnn', 'lstm']
+WARNING:root:deep_predict_prob error: tuple index out of range
+
+URL: http://paypal-secure-login.verify-account123.com/login?user=abc&token=XYZ1234567890
+CNN Probability: 0.500 → Phishing
+[*] Feature Extraction Mode: FAST (Offline trust only)
+[*] Loaded offline domain cache (460,631 domains)
+[INFO] CNN model loaded on cuda
+[INFO] FFNN model loaded on cuda
+[INFO] LSTM model loaded on CPU (CuDNN disabled)
+[DEBUG] Models preloaded at import time:
+  Tree: ['rf', 'xgb', 'lgbm']
+  Deep: ['cnn', 'ffnn', 'lstm']
+WARNING:root:deep_predict_prob error: tuple index out of range
+
+URL: http://paypal-secure-login.verify-account123.com/login?user=abc&token=XYZ1234567890
+FFNN Probability: 0.500 → Legitimate
+[*] Feature Extraction Mode: FAST (Offline trust only)
+[*] Loaded offline domain cache (460,631 domains)
+[INFO] CNN model loaded on cuda
+[INFO] FFNN model loaded on cuda
+[INFO] LSTM model loaded on CPU (CuDNN disabled)
+[DEBUG] Models preloaded at import time:
+  Tree: ['rf', 'xgb', 'lgbm']
+  Deep: ['cnn', 'ffnn', 'lstm']
+WARNING:root:deep_predict_prob error: tuple index out of range
+
+URL: http://paypal-secure-login.verify-account123.com/login?user=abc&token=XYZ1234567890
+LSTM Probability: 0.500 → Phishing
