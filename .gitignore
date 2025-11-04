@@ -16,3 +16,12 @@ models/*.ckpt
 models/*.xlsx
 models/*.txt
 models/*.log
+
+
+model/*.pkl
+model/*.npy
+model/*.csv
+model/*.ckpt
+model/*.xlsx
+model/*.txt
+model/*.log
