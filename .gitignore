@@ -1,6 +1,7 @@
 # Ignore datasets
 data/raw/*
 !data/processed/*.csv  # (optional: allow small processed ones)
+data/*
 
 # Ignore secrets
 *.env
