@@ -39,6 +39,7 @@ def explain_tree_sample(model, x_row: pd.DataFrame, max_reasons=4):
 
 # explain_tree_with_shap.py
 
+
 def explain_tree_sample(model, x_row: pd.DataFrame, max_reasons=4):
     """
     Explain a single sample from a tree-based model (RF/XGB/LGBM) using SHAP.
@@ -97,6 +98,9 @@ def explain_tree_sample(model, x_row: pd.DataFrame, max_reasons=4):
         shap_values = shap_vals[0] if shap_vals.ndim > 1 else shap_vals
     else:
         shap_values = np.array(shap_vals)
+
+    # Normalize to 1D float array to avoid ambiguous array comparisons during sorting
+    shap_values = np.asarray(shap_values, dtype=float).reshape(-1)
 
     # ------------------------------------------
     # 4️⃣ Rank features by absolute contribution

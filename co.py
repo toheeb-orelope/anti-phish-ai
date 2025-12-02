@@ -1,7 +1,7 @@
 import pandas as pd
 
-from extract_features import extract_features
-from run_xai import _TREE_MODELS, get_tree_columns
+# from extract_features import extract_features
+# from run_xai import _TREE_MODELS, get_tree_columns
 
 # cache_path = "data/processed/domain_cache.csv"
 
@@ -18,13 +18,13 @@ from run_xai import _TREE_MODELS, get_tree_columns
 # print(cache.head(3))
 
 
-# # Load your processed datasets
-# train = pd.read_csv("data/processed/train.csv")
-# test = pd.read_csv("data/processed/test.csv")
+# Load your processed datasets
+train = pd.read_csv("data/train.csv")
+test = pd.read_csv("data/test.csv")
 
-# # Print dataset shapes
-# print("Train shape:", train.shape)
-# print("Test shape:", test.shape)
+# Print dataset shapes
+print("Train shape:", train.shape)
+print("Test shape:", test.shape)
 
 # # Display all columns (not truncated)
 # pd.set_option("display.max_columns", None)
@@ -45,15 +45,15 @@ from run_xai import _TREE_MODELS, get_tree_columns
 # print(test.columns.tolist())
 
 
-from explain_tree_with_shap import explain_tree_sample
-from run_xai import _TREE_MODELS, get_tree_columns
-from extract_features import extract_features
-import pandas as pd
+# from explain_tree_with_shap import explain_tree_sample
+# from run_xai import _TREE_MODELS, get_tree_columns
+# from extract_features import extract_features
+# import pandas as pd
 
-feats = extract_features("https://northampton.ac.uk/")
-model = _TREE_MODELS["rf"]
-cols = get_tree_columns(model)
-x_row = pd.DataFrame([{k: feats.get(k, 0) for k in cols}])[cols]
+# feats = extract_features("https://northampton.ac.uk/")
+# model = _TREE_MODELS["rf"]
+# cols = get_tree_columns(model)
+# x_row = pd.DataFrame([{k: feats.get(k, 0) for k in cols}])[cols]
 
-# ✅ new correct call
-explain_tree_sample(model, x_row)
+# # ✅ new correct call
+# explain_tree_sample(model, x_row)

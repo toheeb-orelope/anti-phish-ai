@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 import logging
 import torch.nn.functional as F
+from time import perf_counter
 from urllib.parse import urlparse, urlunparse, parse_qsl, urlencode
 import warnings
 
@@ -103,67 +104,6 @@ def sanitize_url_for_log(u: str) -> str:
         return urlunparse((p.scheme, p.netloc, redacted_path, "", redacted_query, ""))
     except Exception:
         return "[UNPARSABLE_URL]"
-
-
-# Test function to run only RF model (for debugging)
-# ---------------------------------------------------------------------
-# Individual model test helpers (with correct thresholds)
-# ---------------------------------------------------------------------
-def run_rf_only(url: str):
-    feats = extract_features(url)
-    ref_model = _TREE_MODELS["rf"]
-    cols = get_tree_columns(ref_model)
-    x_row = pd.DataFrame([{k: float(feats.get(k, 0)) for k in cols}], columns=cols)
-    prob = tree_predict_prob(ref_model, x_row)
-    RF_THRESHOLD = _load_model_threshold("rf", 0.5)
-    verdict = "Phishing" if prob >= RF_THRESHOLD else "Legitimate"
-    print(f"\nURL: {url}\nRF Probability: {prob:.3f} → {verdict}")
-
-
-def run_xgb_only(url: str):
-    feats = extract_features(url)
-    model = _TREE_MODELS["xgb"]
-    cols = get_tree_columns(model)
-    x_row = pd.DataFrame([{k: float(feats.get(k, 0)) for k in cols}], columns=cols)
-    prob = tree_predict_prob(model, x_row)
-    XGB_THRESHOLD = _load_model_threshold("xgb", 0.5)
-    verdict = "Phishing" if prob >= XGB_THRESHOLD else "Legitimate"
-    print(f"\nURL: {url}\nXGB Probability: {prob:.3f} → {verdict}")
-
-
-def run_lgbm_only(url: str):
-    feats = extract_features(url)
-    model = _TREE_MODELS["lgbm"]
-    cols = get_tree_columns(model)
-    x_row = pd.DataFrame([{k: float(feats.get(k, 0)) for k in cols}], columns=cols)
-    prob = tree_predict_prob(model, x_row)
-    LGBM_THRESHOLD = _load_model_threshold("lgbm", 0.5)
-    verdict = "Phishing" if prob >= LGBM_THRESHOLD else "Legitimate"
-    print(f"\nURL: {url}\nLGBM Probability: {prob:.3f} → {verdict}")
-
-
-def run_cnn_only(url: str):
-    model = _DEEP_MODELS.get("cnn")
-    prob = deep_predict_prob(model, url)
-    CNN_THRESHOLD = _load_model_threshold("cnn", 0.5)
-    verdict = "Phishing" if prob >= CNN_THRESHOLD else "Legitimate"
-    print(f"\nURL: {url}\nCNN Probability: {prob:.3f} → {verdict}")
-
-
-def run_ffnn_only(url: str):
-    model = _DEEP_MODELS.get("ffnn")
-    prob = deep_predict_prob(model, url)
-    FFNN_THRESHOLD = _load_model_threshold("ffnn", 0.5)
-    verdict = "Phishing" if prob >= FFNN_THRESHOLD else "Legitimate"
-    print(f"\nURL: {url}\nFFNN Probability: {prob:.3f} → {verdict}")
-
-
-def run_lstm_only(url: str):
-    model = _DEEP_MODELS.get("lstm")
-    prob = deep_predict_prob(model, url)
-    LSTM_THRESHOLD = _load_model_threshold("lstm", 0.5)
-    verdict = "Phishing" if prob >= LSTM_THRESHOLD else "Legitimate"
-    print(f"\nURL: {url}\nLSTM Probability: {prob:.3f} → {verdict}")
 
 
 # -------------------------
@@ -592,6 +532,7 @@ def run_example(url: str):
     # -------------------------
     validate_url(url)
     init_models_once()
+    timings = {}
 
     # -------------------------
     # 2) Build tree features (numeric, ordered columns)
@@ -614,26 +555,35 @@ def run_example(url: str):
     probs = {}
 
     # --- Tree models (safe by default) ---
+    t0 = perf_counter()
     try:
         if _TREE_MODELS.get("rf") is not None:
             probs["rf"] = tree_predict_prob(_TREE_MODELS["rf"], x_row)
     except Exception as e:
         logging.warning(f"RF inference failed: {e}")
         probs["rf"] = THRESHOLD
+    finally:
+        timings["rf_ms"] = (perf_counter() - t0) * 1000.0
 
+    t0 = perf_counter()
     try:
         if _TREE_MODELS.get("xgb") is not None:
             probs["xgb"] = tree_predict_prob(_TREE_MODELS["xgb"], x_row)
     except Exception as e:
         logging.warning(f"XGB inference failed: {e}")
         probs["xgb"] = THRESHOLD
+    finally:
+        timings["xgb_ms"] = (perf_counter() - t0) * 1000.0
 
+    t0 = perf_counter()
     try:
         if _TREE_MODELS.get("lgbm") is not None:
             probs["lgbm"] = tree_predict_prob(_TREE_MODELS["lgbm"], x_row)
     except Exception as e:
         logging.warning(f"LGBM inference failed: {e}")
         probs["lgbm"] = THRESHOLD
+    finally:
+        timings["lgbm_ms"] = (perf_counter() - t0) * 1000.0
 
     # --- Deep models (handled separately) ---
     # Defaults (in case a model is missing or fails)
@@ -654,6 +604,7 @@ def run_example(url: str):
         )
 
     # CNN (GPU if available)
+    t0 = perf_counter()
     try:
         cnn_model = _DEEP_MODELS.get("cnn")
         if cnn_model is not None:
@@ -680,8 +631,11 @@ def run_example(url: str):
                 )
     except Exception as e:
         logging.warning(f"CNN inference failed: {e}")
+    finally:
+        timings["cnn_ms"] = (perf_counter() - t0) * 1000.0
 
     # FFNN (GPU if available)
+    t0 = perf_counter()
     try:
         ffnn_model = _DEEP_MODELS.get("ffnn")
         if ffnn_model is not None:
@@ -708,8 +662,11 @@ def run_example(url: str):
                 )
     except Exception as e:
         logging.warning(f"FFNN inference failed: {e}")
+    finally:
+        timings["ffnn_ms"] = (perf_counter() - t0) * 1000.0
 
     # LSTM (CPU-only, CuDNN disabled)
+    t0 = perf_counter()
     try:
         lstm_model = _DEEP_MODELS.get("lstm")
         if lstm_model is not None:
@@ -749,6 +706,8 @@ def run_example(url: str):
                 )
     except Exception as e:
         logging.warning(f"LSTM inference failed: {e}")
+    finally:
+        timings["lstm_ms"] = (perf_counter() - t0) * 1000.0
 
     # -------------------------
     # 4) Hybrid fusion (optional weights)
@@ -888,6 +847,7 @@ def run_example(url: str):
         threshold=THRESHOLD,
         final_prob_override=float(final_prob),  # ✅ use overridden score
     )
+    result["timings_ms"] = {k: round(v, 3) for k, v in timings.items()}
 
     # Dev print
     """
@@ -938,8 +898,8 @@ def run_example(url: str):
 # CLI test
 # -------------------------
 if __name__ == "__main__":
-    # test_url = "http://paypal-secure-login.verify-account123.com/login?user=abc&token=XYZ1234567890"
-    test_url = "https://northampton.ac.uk/"
+    test_url = "http://paypal-secure-login.verify-account123.com/login?user=abc&token=XYZ1234567890"
+    # test_url = "https://northampton.ac.uk/"
 
     try:
         out = run_example(test_url)
