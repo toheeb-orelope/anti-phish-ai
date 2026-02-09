@@ -372,4 +372,3 @@ def extract_features(url: str) -> dict:
         features.pop(f, None)
 
     return features
-

@@ -1,0 +1,13 @@
+['url_length' 'domain_length' 'num_dots' 'num_hyphens' 'num_at'
+ 'num_question' 'num_equals' 'num_digits' 'num_subdirs' 'has_https'
+ 'entropy' 'is_shortened' 'has_ip' 'ssl_days_valid' 'has_dns_record'
+ 'tld_enc' 'domain_age_days_x' 'domain_age_days_y' 'popularity_score_x'
+ 'popularity_score_y' 'is_top1m_x' 'is_top1m_y' 'is_majestic_x'
+ 'is_majestic_y' 'trust_rank_norm_x' 'trust_rank_norm_y']
+
+ ['url_length' 'domain_length' 'num_dots' 'num_hyphens' 'num_at'
+ 'num_question' 'num_equals' 'num_digits' 'num_subdirs' 'has_https'
+ 'entropy' 'is_shortened' 'has_ip' 'ssl_days_valid' 'has_dns_record'
+ 'domain_age_days_x' 'popularity_score_x' 'is_top1m_x' 'is_majestic_x'
+ 'trust_rank_norm_x' 'domain_age_days_y' 'popularity_score_y' 'is_top1m_y'
+ 'is_majestic_y' 'trust_rank_norm_y' 'domain_age_days' 'tld_enc']

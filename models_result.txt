@@ -1,0 +1,220 @@
+JSON: {
+  "url": "http://paypal-secure-login.verify-account123.com/login?user=abc&token=XYZ1234567890",
+  "verdict": "Phishing",
+  "confidence": 0.914,
+  "final_prob": 0.9137,
+  "model_breakdown": {
+    "rf": 0.9108447228965396,
+    "xgb": 0.965098568198265,
+    "lgbm": 0.9927570002817608,
+    "cnn": 0.7386381030082703,
+    "ffnn": 0.8601434230804443,
+    "lstm": 0.7590512037277222,
+    "hybrid": 0.9136611336621778,
+    "final": 0.9136611336621778
+  },
+  "reasons": [
+    "Model focused on \u201chttp:/\u201d",
+    "Model focused on \u201c.\u201d",
+    "is_top1m_x strongly influenced the decision",
+    "popularity_score_x strongly influenced the decision"
+  ],
+  "timings_ms": {
+    "rf_ms": 888.063,
+    "xgb_ms": 81.23,
+    "lgbm_ms": 9587.666,
+    "cnn_ms": 1233.946,
+    "ffnn_ms": 3.153,
+    "lstm_ms": 99.169
+  }
+}
+
+
+
+JSON: {
+  "url": "https://northampton.ac.uk/",
+  "verdict": "Benign",
+  "confidence": 0.531,
+  "final_prob": 0.4693,
+  "model_breakdown": {
+    "rf": 0.8575517752794675,
+    "xgb": 0.936646172291881,
+    "lgbm": 0.8956658806961251,
+    "cnn": 0.6955965757369995,
+    "ffnn": 0.8901792764663696,
+    "lstm": 0.8733535408973694,
+    "hybrid": 0.87739340649193,
+    "final": 0.4693483516229825
+  },
+  "reasons": [
+    "Model focused on \u201chttps:/\u201d",
+    "Model focused on \u201c.\u201d",
+    "Model focused on \u201c/northampton.\u201d"
+  ],
+  "timings_ms": {
+    "rf_ms": 609.089,
+    "xgb_ms": 22.562,
+    "lgbm_ms": 8537.135,
+    "cnn_ms": 1107.682,
+    "ffnn_ms": 3.173,
+    "lstm_ms": 88.834
+  }
+}
+
+
+
+JSON: {
+  "url": "https://docs.ultralytics.com/",
+  "verdict": "Phishing",
+  "confidence": 0.857,
+  "final_prob": 0.857,
+  "model_breakdown": {
+    "rf": 0.9000103229283016,
+    "xgb": 0.933547794387475,
+    "lgbm": 0.8898098193991244,
+    "cnn": 0.6523040533065796,
+    "ffnn": 0.8804224729537964,
+    "lstm": 0.5812732577323914,
+    "hybrid": 0.8570086328447891,
+    "final": 0.8570086328447891
+  },
+  "reasons": [
+    "Model focused on \u201chttps:/\u201d",
+    "Model focused on \u201c.\u201d",
+    "Model focused on \u201c/\u201d"
+  ],
+  "timings_ms": {
+    "rf_ms": 1122.712,
+    "xgb_ms": 38.863,
+    "lgbm_ms": 9746.873,
+    "cnn_ms": 1208.809,
+    "ffnn_ms": 2.544,
+    "lstm_ms": 108.29
+  }
+}
+
+
+JSON: {
+  "url": "http://testsafebrowsing.appspot.com/s/phishing.html",
+  "verdict": "Phishing",
+  "confidence": 0.938,
+  "final_prob": 0.9379,
+  "model_breakdown": {
+    "rf": 0.9043552228806652,
+    "xgb": 0.9594275452909162,
+    "lgbm": 0.965858455910222,
+    "cnn": 0.9076694846153259,
+    "ffnn": 0.8912340998649597,
+    "lstm": 0.9670142531394958,
+    "hybrid": 0.9379034591554326,
+    "final": 0.9379034591554326
+  },
+  "reasons": [
+    "Model focused on \u201chttp:/\u201d",
+    "Model focused on \u201c.\u201d",
+    "is_top1m_x strongly influenced the decision",
+    "num_subdirs strongly influenced the decision"
+  ],
+  "timings_ms": {
+    "rf_ms": 860.259,
+    "xgb_ms": 35.526,
+    "lgbm_ms": 10604.787,
+    "cnn_ms": 1288.118,
+    "ffnn_ms": 2.826,
+    "lstm_ms": 96.44
+  }
+}
+
+JSON: {
+  "url": "https://uvicorn.dev/",
+  "verdict": "Phishing",
+  "confidence": 0.843,
+  "final_prob": 0.8432,
+  "model_breakdown": {
+    "rf": 0.9311840969358499,
+    "xgb": 0.937732745734672,
+    "lgbm": 0.9050709222923491,
+    "cnn": 0.5041319727897644,
+    "ffnn": 0.6620327830314636,
+    "lstm": 0.63036048412323,
+    "hybrid": 0.8432073779027559,
+    "final": 0.8432073779027559
+  },
+  "reasons": [
+    "Model focused on \u201chttps:/\u201d",
+    "Model focused on \u201c.\u201d",
+    "Model focused on \u201c/uvicorn.\u201d"
+  ],
+  "timings_ms": {
+    "rf_ms": 480.609,
+    "xgb_ms": 20.268,
+    "lgbm_ms": 6108.193,
+    "cnn_ms": 689.499,
+    "ffnn_ms": 1.055,
+    "lstm_ms": 58.654
+  }
+}
+
+{
+  "url": "https://uvicorn.dev/",
+  "verdict": "Benign",
+  "confidence": 0.3314868344089147,
+  "final_prob": 0.3314868344089147,
+  "model_breakdown": {
+    "rf": 0.2752612804232787,
+    "xgb": 0.05406931325655414,
+    "lgbm": 0.37561701021464916,
+    "cnn": 0.5041319727897644,
+    "ffnn": 0.6620327830314636,
+    "lstm": 0.63036048412323,
+    "hybrid": 0.32594733763565864,
+    "final": 0.3314868344089147
+  },
+  "reasons": [
+  "reasons": [
+    "Trusted domain override applied for uvicorn.dev",
+    "Model focused on \u201chttps:/\u201d",
+    "Model focused on \u201c.\u201d",
+    "Model focused on \u201c/uvicorn.\u201d",
+    "popularity_score_x strongly influenced the decision"
+  ],
+  "threshold_used": 0.85,
+  "timings_ms": {
+    "rf_ms": 641.491,
+    "xgb_ms": 26.63,
+    "lgbm_ms": 10548.545,
+    "cnn_ms": 1505.903,
+    "ffnn_ms": 4.758,
+    "lstm_ms": 122.083
+  }
+}
+
+JSON: {
+  "url": "https://uvicorn.dev/",
+  "verdict": "Benign",
+  "confidence": 0.157,
+  "final_prob": 0.8432,
+  "model_breakdown": {
+    "rf": 0.9311840969358499,
+    "xgb": 0.937732745734672,
+    "lgbm": 0.9050709222923491,
+    "cnn": 0.5041319727897644,
+    "ffnn": 0.6620327830314636,
+    "lstm": 0.63036048412323,
+    "hybrid": 0.8432073779027559,
+    "final": 0.8432073779027559
+  },
+  "reasons": [
+    "Model focused on \u201chttps:/\u201d",
+    "Model focused on \u201c.\u201d",
+    "Model focused on \u201c/uvicorn.\u201d"
+  ],
+  "timings_ms": {
+    "rf_ms": 919.145,
+    "xgb_ms": 34.475,
+    "lgbm_ms": 10062.605,
+    "cnn_ms": 1076.329,
+    "ffnn_ms": 1.346,
+    "lstm_ms": 88.607
+  }
+}

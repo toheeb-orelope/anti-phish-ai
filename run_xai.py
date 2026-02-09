@@ -782,7 +782,7 @@ def run_example(url: str):
 
     # === Set threshold (academic vs production mode) ===
     academic_threshold = THRESHOLD
-    production_threshold = 0.6
+    production_threshold = 0.85  # higher to reduce false positives
 
     MODE = "production"  # or "academic"
 
@@ -898,8 +898,11 @@ def run_example(url: str):
 # CLI test
 # -------------------------
 if __name__ == "__main__":
-    test_url = "http://paypal-secure-login.verify-account123.com/login?user=abc&token=XYZ1234567890"
+    # test_url = "http://paypal-secure-login.verify-account123.com/login?user=abc&token=XYZ1234567890"
     # test_url = "https://northampton.ac.uk/"
+    # test_url = "https://docs.ultralytics.com/"
+    # test_url = "http://testsafebrowsing.appspot.com/s/phishing.html"
+    test_url = "https://uvicorn.dev/"
 
     try:
         out = run_example(test_url)
