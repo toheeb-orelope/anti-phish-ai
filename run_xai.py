@@ -22,7 +22,8 @@ from extract_features import extract_features
 # NOTE: make_plain_english imports/uses explain_tree_sample internally; we keep import here for clarity
 from explain_tree_with_shap import explain_tree_sample
 
-# Lightning models (your classes)
+# Lightning models must be imported after setting up the device and before loading checkpoints, 
+# to ensure correct architecture mapping.
 from phishin_train_cnn import LightningCNN
 from phishin_nlp_lstm import LightningLSTM
 from phishin_train_ffnn import LightningFFNN
@@ -44,6 +45,8 @@ def _load_threshold():
 THRESHOLD = _load_threshold()
 
 
+# Helper to load model-specific thresholds if needed 
+# (not currently used, but can be extended for per-model thresholds in XAI text).
 def _load_model_threshold(name, default=0.5):
     try:
         with open("model/thresholds.json") as f:
@@ -53,34 +56,31 @@ def _load_model_threshold(name, default=0.5):
         return default
 
 
-# -------------------------
-# Config
-# -------------------------
+
+# Config and constants
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+# Model paths 
 RF_PATH = "model/rf_calibrated.pkl"
 XGB_PATH = "model/xgb_calibrated.pkl"
 LGBM_PATH = "model/lgbm_calibrated.pkl"
-# CNN_CKPT = "models/cnn_best.ckpt"
 LSTM_CKPT = "models/lstm_best.ckpt"
-# FFNN_CKPT = "models/ffnn_best.ckpt"
-CNN_CKPT = "models/cnn_lightning.ckpt"  # trained checkpoint
-FFNN_CKPT = "models/ffnn_lightning.ckpt"  # trained checkpoint
+CNN_CKPT = "models/cnn_lightning.ckpt" 
+FFNN_CKPT = "models/ffnn_lightning.ckpt" 
 
 
 MAX_URL_LEN = 2048  # basic abuse guard
 URL_ALLOWED = re.compile(r"^[\x20-\x7E]+$")  # printable ASCII
 
-# -------------------------
-# Logging (sanitized)
-# -------------------------
+
+# Logging (sanitised)
 logging.basicConfig(
     filename="xai_logs.log",
     level=logging.INFO,
     format="%(asctime)s %(levelname)s %(message)s",
 )
 
-
+# URL sanitisation for logs (redact query values and long token-like segments)
 def sanitize_url_for_log(u: str) -> str:
     """
     Redact query values and long token-like segments from path to avoid logging secrets.
@@ -106,9 +106,8 @@ def sanitize_url_for_log(u: str) -> str:
         return "[UNPARSABLE_URL]"
 
 
-# -------------------------
+
 # Simple input validation
-# -------------------------
 def validate_url(u: str) -> None:
     if not isinstance(u, str) or not u.strip():
         raise ValueError("Empty URL.")
@@ -123,53 +122,17 @@ def validate_url(u: str) -> None:
         raise ValueError("URL must include a domain (netloc).")
 
 
-# -------------------------
+
 # Model caches (load once)
-# -------------------------
 _TREE_MODELS = {}
 _DEEP_MODELS = {}
 
-
+# Load tree models with joblib, handling missing files gracefully.
 def load_tree_model(path):
     return joblib.load(path) if os.path.exists(path) else None
 
 
-# old version
-"""
-def load_deep_models():
-    
-    # Load LightningModule checkpoints with correct architectures.
-    # NOTE: This returns *initialized models*; do NOT wrap them with torch.load again.
-    models = {}
-    if os.path.exists(CNN_CKPT):
-        models["cnn"] = (
-            LightningCNN.load_from_checkpoint(CNN_CKPT, map_location=DEVICE)
-            .to(DEVICE)
-            .eval()
-        )
-    if os.path.exists(LSTM_CKPT):
-        models["lstm"] = (
-            LightningLSTM.load_from_checkpoint(LSTM_CKPT, map_location=DEVICE)
-            .to(DEVICE)
-            .eval()
-        )
-    # if os.path.exists(LSTM_CKPT):
-    #     models["lstm"] = (
-    #         LightningLSTM.load_from_checkpoint(LSTM_CKPT, map_location="cpu")
-    #         .to("cpu")
-    #         .eval()
-    #     )
-    if os.path.exists(FFNN_CKPT):
-        models["ffnn"] = (
-            LightningFFNN.load_from_checkpoint(FFNN_CKPT, map_location=DEVICE)
-            .to(DEVICE)
-            .eval()
-        )
-    return models
-"""
-
-
-# new version: always load to CPU, move to GPU at inference time if available
+# Load deep models with careful device mapping and CuDNN handling for LSTM to avoid known issues.
 def load_deep_models():
     """
     Load LightningModule checkpoints with correct architectures.
@@ -216,6 +179,7 @@ def load_deep_models():
     return models
 
 
+# Initialize models at import time to ensure they're ready for the first request and to avoid repeated loading.
 def init_models_once():
     global _TREE_MODELS, _DEEP_MODELS
     if not _TREE_MODELS:
@@ -228,20 +192,15 @@ def init_models_once():
         _DEEP_MODELS = load_deep_models()
 
 
-# ---------------------------------------------------------
 # Initialize all models immediately when module is loaded
-# ---------------------------------------------------------
 init_models_once()
 print("[DEBUG] Models preloaded at import time:")
 print("  Tree:", list(_TREE_MODELS.keys()))
 print("  Deep:", list(_DEEP_MODELS.keys()))
 
 
-# -------------------------
+
 # Probability helpers
-# -------------------------
-
-
 def tree_predict_prob(model, x_row: pd.DataFrame) -> float:
     """Return calibrated probability for a single sample (row 0).
 
@@ -286,48 +245,8 @@ def tree_predict_prob(model, x_row: pd.DataFrame) -> float:
     return THRESHOLD
 
 
-# working version
-# Old version
-"""
-def deep_predict_prob(model, url: str, max_len=200) -> float:
-    if model is None:
-        return THRESHOLD
-    s = str(url)[:max_len].ljust(max_len)
-    idxs = torch.tensor(
-        [min(ord(c), 127) for c in s], dtype=torch.long, device=DEVICE
-    ).unsqueeze(
-        0
-    )  # [1, seq]
 
-    try:
-        torch.backends.cudnn.enabled = False
-        with torch.no_grad():
-            out = model(idxs)
-        torch.backends.cudnn.enabled = True
-
-        if isinstance(out, (tuple, list)):
-            out = out[0]
-        # binary logit -> sigmoid
-        if out.ndim == 0 or (out.ndim == 1 and out.numel() == 1):
-            return float(torch.sigmoid(out).item())
-        # [C] -> softmax
-        if out.ndim == 1 and out.shape[0] == 2:
-            return float(F.softmax(out, dim=0)[1].item())
-        # [B, C]
-        if out.ndim == 2:
-            probs = F.softmax(out, dim=1)
-            return (
-                float(probs[0, 1].item())
-                if probs.shape[1] > 1
-                else float(probs[0, 0].item())
-            )
-
-    except Exception as e:
-        logging.warning(f"deep_predict_prob error: {e}")
-    return THRESHOLD
-"""
-
-
+# Deep models are handled separately due to PyTorch specifics (device, input encoding, output shape).
 def deep_predict_prob(model, url: str) -> float:
     if model is None:
         return 0.5
@@ -375,7 +294,7 @@ def deep_predict_prob(model, url: str) -> float:
         logging.warning(f"deep_predict_prob error: {e}")
         return 0.5
 
-
+# Helper to get correct feature names for SHAP explanations, based on the model's attributes.
 def get_tree_columns(model):
     """Automatically get correct feature names for LightGBM/XGB/RF."""
     if hasattr(model, "feature_name_") and model.feature_name_ is not None:
@@ -401,142 +320,21 @@ def get_tree_columns(model):
     ]
 
 
-# -------------------------
-# Main entry
-# -------------------------
-# Working version
-"""
-def run_example(url: str):
-    # Security: validate first
-    validate_url(url)
 
-    # Load models once
-    init_models_once()
-
-    # Prepare features/columns (must match training schema)
-    # feats = extract_features(url)
-    # tree_model = (
-    #     _TREE_MODELS.get("lgbm") or _TREE_MODELS.get("xgb") or _TREE_MODELS.get("rf")
-    # )  # dynamically get the right feature set based on whichever model exists
-    # ref_model = (
-    #     _TREE_MODELS.get("lgbm") or _TREE_MODELS.get("xgb") or _TREE_MODELS.get("rf")
-    # )
-    # tree_columns = get_tree_columns(ref_model)
-
-    # x_row = pd.DataFrame([{k: feats.get(k, 0) for k in tree_columns}])[tree_columns]
-
-    from sklearn.preprocessing import LabelEncoder
-
-    # Load extracted features
-    feats = extract_features(url)
-
-    # Prepare DataFrame for tree-based models
-    tree_model = (
-        _TREE_MODELS.get("lgbm") or _TREE_MODELS.get("xgb") or _TREE_MODELS.get("rf")
-    )
-    ref_model = (
-        _TREE_MODELS.get("lgbm") or _TREE_MODELS.get("xgb") or _TREE_MODELS.get("rf")
-    )
-    tree_columns = get_tree_columns(ref_model)
-
-    # ----------------------------------------------------
-    # Build feature DataFrame with guaranteed numeric dtype
-    # ----------------------------------------------------
-    x_row_dict = {k: float(feats.get(k, 0)) for k in tree_columns}
-    x_row = pd.DataFrame([x_row_dict], columns=tree_columns).astype(float)
-
-    print("\n[DEBUG] Feature types before model prediction:\n", x_row.dtypes)
-
-    # Probabilities
-    probs = {}
-    if _TREE_MODELS.get("rf") is not None:
-        probs["rf"] = tree_predict_prob(_TREE_MODELS["rf"], x_row)
-    if _TREE_MODELS.get("xgb") is not None:
-        probs["xgb"] = tree_predict_prob(_TREE_MODELS["xgb"], x_row)
-    if _TREE_MODELS.get("lgbm") is not None:
-        probs["lgbm"] = tree_predict_prob(_TREE_MODELS["lgbm"], x_row)
-
-    probs["cnn"] = deep_predict_prob(_DEEP_MODELS.get("cnn"), url)
-    probs["lstm"] = deep_predict_prob(_DEEP_MODELS.get("lstm"), url)
-    probs["ffnn"] = deep_predict_prob(_DEEP_MODELS.get("ffnn"), url)
-
-    # Pick a representative model for explanations
-    tree_model = (
-        _TREE_MODELS.get("lgbm") or _TREE_MODELS.get("xgb") or _TREE_MODELS.get("rf")
-    )
-    deep_model = (
-        _DEEP_MODELS.get("lstm") or _DEEP_MODELS.get("cnn") or _DEEP_MODELS.get("ffnn")
-    )
-
-    # XAI fusion -> plain English
-    result = make_plain_english(
-        url=url,
-        probs=probs,
-        tree_model=tree_model,
-        tree_columns=tree_columns,
-        deep_model=deep_model,
-        max_reasons=4,
-    )
-
-    # Console view (dev)
-    print("\n=== XAI RESULT ===")
-    print("URL:", result["url"])
-    print("Verdict:", result["verdict"])
-    print("Confidence:", result["confidence"])
-    print(
-        "Model breakdown:",
-        {k: round(v, 3) for k, v in result["model_breakdown"].items()},
-    )
-    print("Top reasons:")
-    for i, r in enumerate(result["reasons"], 1):
-        print(f" {i}. {r}")
-
-    # Sanitized logging
-    safe = sanitize_url_for_log(url)
-    logging.info(f"{safe} -> {result['verdict']} ({result['confidence']})")
-
-    # ----------------------------------------------------
-    # Save ensemble probabilities for evaluation
-    # ----------------------------------------------------
-    try:
-        ensemble_path = "models/ensemble_probs.npy"
-        prob_values = np.array(
-            list(result["model_breakdown"].values()), dtype=np.float32
-        )
-
-        # Append mode: load old, then stack new one
-        if os.path.exists(ensemble_path):
-            existing = np.load(ensemble_path, allow_pickle=True)
-            if existing.ndim == 1:
-                combined = np.vstack([existing, prob_values])
-            else:
-                combined = np.vstack([existing, prob_values])
-        else:
-            combined = np.expand_dims(prob_values, axis=0)
-
-        np.save(ensemble_path, combined)
-        print(f"✅ Ensemble probabilities saved to {ensemble_path}")
-    except Exception as e:
-        print(f"[WARN] Could not save ensemble probabilities: {e}")
-
-    # API-friendly return
-    return result  # FastAPI/Flask will JSON-serialize this
-"""
-
-
-# New
+# Main entrypoint for running the XAI process on a single URL. This function orchestrates all steps 
+# from validation to model inference to explanation generation.
 def run_example(url: str):
     global THRESHOLD
-    # -------------------------
+    
     # 1) Validate & init
-    # -------------------------
+    
     validate_url(url)
     init_models_once()
     timings = {}
 
-    # -------------------------
+    
     # 2) Build tree features (numeric, ordered columns)
-    # -------------------------
+    
     feats = extract_features(url)
 
     # choose any available tree model to derive the correct column order
@@ -549,9 +347,9 @@ def run_example(url: str):
 
     # print("\n[DEBUG] Feature types before model prediction:\n", x_row.dtypes)
 
-    # -------------------------
+    
     # 3) Collect probabilities (tree + deep)
-    # -------------------------
+    
     probs = {}
 
     # --- Tree models (safe by default) ---
@@ -709,9 +507,9 @@ def run_example(url: str):
     finally:
         timings["lstm_ms"] = (perf_counter() - t0) * 1000.0
 
-    # -------------------------
+    
     # 4) Hybrid fusion (optional weights)
-    # -------------------------
+    
     tree_vals = [probs[k] for k in ("rf", "xgb", "lgbm") if k in probs]
     deep_vals = [probs[k] for k in ("cnn", "ffnn", "lstm") if k in probs]
 
@@ -721,9 +519,9 @@ def run_example(url: str):
     hybrid_score = 0.75 * tree_mean + 0.25 * deep_mean
     probs["hybrid"] = float(hybrid_score)
 
-    # -------------------------
+    
     # Trusted-domain override (production safeguard)
-    # -------------------------
+    
     # canonicalize domain / tld
     p = urlparse(url)
     domain_only = p.netloc.lower().split(":")[0]
@@ -750,17 +548,17 @@ def run_example(url: str):
     TRUSTED_DOMAINS = {"google.com", "bbc.co.uk"}  # add high-confidence exceptions here
 
     trusted_override = False
-    # 1) exact domain whitelist
+    #  exact domain whitelist
     if domain_only in TRUSTED_DOMAINS:
         trusted_override = True
 
-    # 2) suffix-based rule
+    #  suffix-based rule
     for suf in TRUSTED_SUFFIXES:
         if domain_only.endswith(suf):
             trusted_override = True
             break
 
-    # 3) tld-based fallback (less strict)
+    #  tld-based fallback (less strict)
     if not trusted_override and tld in TRUSTED_TLDS:
         # only apply if tree_mean & deep_mean are not extremely high
         # this prevents override when model is very confident phishing
@@ -793,10 +591,10 @@ def run_example(url: str):
         if trusted_override:
             THRESHOLD = 0.8  # require 80% certainty to flag trusted domains
 
-    # -------------------------
-    # 5) Pick models for XAI text
+    
+    #  Pick models for XAI text
     #    Choose the strongest tree model for SHAP on this URL.
-    # -------------------------
+    
     tree_candidates = {k: _TREE_MODELS.get(k) for k in ("rf", "xgb", "lgbm")}
     best_tree_key = None
     best_tree_val = -1.0
@@ -821,22 +619,6 @@ def run_example(url: str):
         _DEEP_MODELS.get("lstm") or _DEEP_MODELS.get("cnn") or _DEEP_MODELS.get("ffnn")
     )
 
-    # -------------------------
-    # 6) Plain-English XAI
-    # -------------------------
-    """
-    result = make_plain_english(
-        url=url,
-        probs={k: float(v) for k, v in probs.items()},
-        tree_model=tree_model,
-        tree_columns=tree_columns,
-        deep_model=deep_model,
-        max_reasons=4,
-        threshold=THRESHOLD,
-        final_prob_override=float(hybrid_score),
-    )
-    """
-
     result = make_plain_english(
         url=url,
         probs={k: float(v) for k, v in probs.items()},
@@ -848,55 +630,15 @@ def run_example(url: str):
         final_prob_override=float(final_prob),  # ✅ use overridden score
     )
     result["timings_ms"] = {k: round(v, 3) for k, v in timings.items()}
-
-    # Dev print
-    """
-    print("\n=== XAI RESULT ===")
-    print("URL:", result["url"])
-    print("Verdict:", result["verdict"])
-    print("Confidence:", result["confidence"])
-    print(
-        "Model breakdown:",
-        {k: round(v, 3) for k, v in result["model_breakdown"].items()},
-    )
-    print("Top reasons:")
-    for i, r in enumerate(result["reasons"], 1):
-        print(f" {i}. {r}")
-    """
     # Sanitized log
     safe = sanitize_url_for_log(url)
     logging.info(f"{safe} -> {result['verdict']} ({result['confidence']})")
-
-    # -------------------------
-    # 7) Save ensemble probabilities (append)
-    # -------------------------
-    """
-    try:
-        ensemble_path = "models/ensemble_probs.npy"
-        prob_values = np.array(
-            list(result["model_breakdown"].values()), dtype=np.float32
-        )
-        if os.path.exists(ensemble_path):
-            existing = np.load(ensemble_path, allow_pickle=True)
-            combined = (
-                np.vstack([existing, prob_values])
-                if existing.ndim > 0
-                else np.expand_dims(prob_values, 0)
-            )
-        else:
-            combined = np.expand_dims(prob_values, axis=0)
-        np.save(ensemble_path, combined)
-        print(f"✅ Ensemble probabilities saved to {ensemble_path}")
-    except Exception as e:
-        print(f"[WARN] Could not save ensemble probabilities: {e}")
-        """
-
+    
     return result
 
 
-# -------------------------
+
 # CLI test
-# -------------------------
 if __name__ == "__main__":
     # test_url = "http://paypal-secure-login.verify-account123.com/login?user=abc&token=XYZ1234567890"
     # test_url = "https://northampton.ac.uk/"
