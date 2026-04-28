@@ -1,4 +1,3 @@
-# xai_runner.py
 import os
 import re
 import json
@@ -323,7 +322,34 @@ def get_tree_columns(model):
 
 # Main entrypoint for running the XAI process on a single URL. This function orchestrates all steps 
 # from validation to model inference to explanation generation.
-def run_example(url: str):
+def _make_fast_reasons(url: str, feats: dict, probs: dict, max_reasons: int = 4):
+    reasons = []
+
+    if feats.get("num_subdirs", 0) >= 5:
+        reasons.append("Deeply nested path")
+    if feats.get("num_hyphens", 0) >= 3:
+        reasons.append("Many hyphens in domain/path")
+    if feats.get("num_digits", 0) >= 10:
+        reasons.append("Unusually high number of digits")
+    if feats.get("num_at", 0) >= 1:
+        reasons.append("Contains '@' which can hide real destination")
+    if feats.get("is_shortened", 0) == 1:
+        reasons.append("URL shortener used")
+    if feats.get("has_ip", 0) == 1:
+        reasons.append("Domain looks like an IP address")
+    if feats.get("url_length", 0) > 90:
+        reasons.append("Unusually long URL")
+    if feats.get("has_https", 1) == 0:
+        reasons.append("No HTTPS detected")
+
+    if not reasons:
+        top_model = max(probs.items(), key=lambda kv: float(kv[1]))[0] if probs else "hybrid"
+        reasons.append(f"Fast verdict based on {top_model} model confidence")
+
+    return reasons[:max_reasons]
+
+
+def run_example(url: str, include_explanations: bool = True):
     global THRESHOLD
     
     # 1) Validate & init
@@ -619,17 +645,33 @@ def run_example(url: str):
         _DEEP_MODELS.get("lstm") or _DEEP_MODELS.get("cnn") or _DEEP_MODELS.get("ffnn")
     )
 
-    result = make_plain_english(
-        url=url,
-        probs={k: float(v) for k, v in probs.items()},
-        tree_model=tree_model,
-        tree_columns=tree_columns,
-        deep_model=deep_model,
-        max_reasons=4,
-        threshold=THRESHOLD,
-        final_prob_override=float(final_prob),  # ✅ use overridden score
-    )
+    probs_out = {k: float(v) for k, v in probs.items()}
+
+    if include_explanations:
+        result = make_plain_english(
+            url=url,
+            probs=probs_out,
+            tree_model=tree_model,
+            tree_columns=tree_columns,
+            deep_model=deep_model,
+            max_reasons=4,
+            threshold=THRESHOLD,
+            final_prob_override=float(final_prob),  # ✅ use overridden score
+        )
+    else:
+        verdict = "Phishing" if float(final_prob) >= THRESHOLD else "Benign"
+        confidence = float(final_prob if verdict == "Phishing" else 1 - final_prob)
+        result = {
+            "url": url,
+            "verdict": verdict,
+            "confidence": round(confidence, 3),
+            "final_prob": round(float(final_prob), 4),
+            "model_breakdown": probs_out,
+            "reasons": _make_fast_reasons(url, feats, probs_out),
+        }
+
     result["timings_ms"] = {k: round(v, 3) for k, v in timings.items()}
+    result["explanations_included"] = include_explanations
     # Sanitized log
     safe = sanitize_url_for_log(url)
     logging.info(f"{safe} -> {result['verdict']} ({result['confidence']})")

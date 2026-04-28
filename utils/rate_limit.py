@@ -1,29 +1,31 @@
-# utils/rate_limit.py
 import time
-from fastapi import Request, HTTPException, status
+from collections import defaultdict
 
-# -------------------------
-# Basic in-memory rate limiting
-# -------------------------
-RATE_LIMIT = {}
-# Allow a higher burst rate to support browser extension scans
-MAX_REQUESTS = 60  # allowed requests per window
-WINDOW_SECONDS = 60  # per time window (seconds)
+from fastapi import HTTPException, Request, status
+
+RATE_LIMIT = defaultdict(list)
+MAX_REQUESTS = 60
+WINDOW_SECONDS = 60
+
+
+def _get_rate_limit_identifier(request: Request) -> str:
+    api_key = request.headers.get("x-api-key") or request.headers.get("X-API-Key")
+    if api_key:
+        return api_key
+    if request.client and request.client.host:
+        return request.client.host
+    return "unknown"
 
 
 async def rate_limiter(request: Request):
     """Simple per-API-key rate limiting (fallback to client IP)."""
-    # Prefer API key if provided, so users are isolated.
-    api_key = request.headers.get("x-api-key") or request.headers.get("X-API-Key")
-    identifier = api_key if api_key else (request.client.host if request.client else "unknown")
-
+    identifier = _get_rate_limit_identifier(request)
     now = time.time()
-
-    if identifier not in RATE_LIMIT:
-        RATE_LIMIT[identifier] = []
-
-    # keep only requests within the window
-    RATE_LIMIT[identifier] = [t for t in RATE_LIMIT[identifier] if now - t < WINDOW_SECONDS]
+    RATE_LIMIT[identifier] = [
+        timestamp
+        for timestamp in RATE_LIMIT[identifier]
+        if now - timestamp < WINDOW_SECONDS
+    ]
 
     if len(RATE_LIMIT[identifier]) >= MAX_REQUESTS:
         raise HTTPException(

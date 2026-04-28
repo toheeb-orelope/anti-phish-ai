@@ -39,43 +39,6 @@ all_data["url"] = all_data["url"].astype(str).str.lower().str.strip()
 all_data.drop_duplicates(subset=["url"], inplace=True)
 
 
-# ========== Feature Engineering ==========
-"""
-def extract_features(url):
-    try:
-        parsed = urlparse(url)
-        domain = parsed.netloc if parsed.netloc else parsed.path
-        path = parsed.path
-
-        features = {
-            "url_length": len(url),
-            "domain_length": len(domain),
-            "num_dots": url.count("."),
-            "num_hyphens": url.count("-"),
-            "num_at": url.count("@"),
-            "num_question": url.count("?"),
-            "num_equals": url.count("="),
-            "num_digits": sum(c.isdigit() for c in url),
-            "num_subdirs": url.count("/"),
-            "has_https": 1 if parsed.scheme == "https" else 0,
-            "tld": domain.split(".")[-1] if "." in domain else "",
-        }
-    except Exception:
-        features = {
-            "url_length": 0,
-            "domain_length": 0,
-            "num_dots": 0,
-            "num_hyphens": 0,
-            "num_at": 0,
-            "num_question": 0,
-            "num_equals": 0,
-            "num_digits": 0,
-            "num_subdirs": 0,
-            "has_https": 0,
-            "tld": "",
-        }
-    return features
-"""
 print("[*] Extracting features (Lexical + SSL + DNS + WHOIS)... this may take a while.")
 records = [extract_features(u) for u in all_data["url"]]
 features_df = pd.DataFrame(records)

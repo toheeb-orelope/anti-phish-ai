@@ -3,12 +3,11 @@ from __future__ import annotations
 import json
 import secrets
 import time
+import hashlib
 from pathlib import Path
 from typing import Dict, Optional, Tuple
-import hashlib
 
 
-# Simple file-backed user store for local usage
 USERS_PATH = Path("data/users.json")
 
 
@@ -61,7 +60,11 @@ def create_user(username: str, password: str) -> dict:
         "last_login_at": None,
     }
     _save_users(users)
-    return {k: v for k, v in users[username].items() if k != "password_hash" and k != "salt"}
+    return {
+        key: value
+        for key, value in users[username].items()
+        if key not in {"password_hash", "salt"}
+    }
 
 
 def authenticate(username: str, password: str) -> Optional[dict]:
@@ -89,7 +92,11 @@ def set_user_api_key(username: str, api_key: str) -> dict:
     users[username]["api_key"] = api_key
     users[username]["last_login_at"] = int(time.time())
     _save_users(users)
-    return {k: v for k, v in users[username].items() if k != "password_hash" and k != "salt"}
+    return {
+        key: value
+        for key, value in users[username].items()
+        if key not in {"password_hash", "salt"}
+    }
 
 
 def get_user_by_api_key(api_key: str) -> Optional[dict]:
@@ -109,4 +116,3 @@ def get_public_user(username: str) -> Optional[dict]:
     if not u:
         return None
     return {k: v for k, v in u.items() if k not in {"password_hash", "salt"}}
-

@@ -1,30 +1,24 @@
-# main.py
-from fastapi import FastAPI, HTTPException, status, Depends, Request
+from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
-import uvicorn
 
-# Local imports
-from run_xai import run_example, THRESHOLD
+from run_xai import THRESHOLD, run_example
 from utils.fastapi_security import verify_api_key
-from utils.response_schemas import (
-    URLResponse,
-    URLRequest,
-    SignupRequest,
-    LoginRequest,
-    LoginResponse,
-)
 from utils.rate_limit import rate_limiter
+from utils.response_schemas import (
+    LoginResponse,
+    LoginRequest,
+    SignupRequest,
+    URLRequest,
+    URLResponse,
+)
 from utils.user_store import (
-    create_user,
     authenticate,
+    create_user,
     generate_api_key,
-    set_user_api_key,
     get_public_user,
+    set_user_api_key,
 )
 
-# -------------------------
-# Initialize App
-# -------------------------
 app = FastAPI(
     title="Anti-Phish AI Detection API",
     description="Real-time phishing detection using hybrid AI model + Explainable AI.",
@@ -34,7 +28,6 @@ app = FastAPI(
     ],
 )
 
-# CORS for local browser/extension calls
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -44,21 +37,15 @@ app.add_middleware(
 )
 
 
-# -------------------------
-# Root route
-# -------------------------
 @app.get("/", status_code=status.HTTP_200_OK)
 async def root():
     return {
-        "message": "🚀 Anti-Phish AI API is running",
+        "message": "Anti-Phish AI API is running",
         "threshold": THRESHOLD,
         "documentation": "/docs",
     }
 
 
-# -------------------------
-# Prediction route
-# -------------------------
 @app.post(
     "/predict",
     response_model=URLResponse,
@@ -67,7 +54,7 @@ async def root():
 )
 async def predict_url(request_data: URLRequest):
     try:
-        result = run_example(request_data.url)
+        result = run_example(request_data.url, include_explanations=False)
         return URLResponse(
             url=result["url"],
             verdict=result["verdict"],
@@ -76,30 +63,62 @@ async def predict_url(request_data: URLRequest):
             reasons=result.get("reasons", []),
             model_breakdown=result.get("model_breakdown", {}),
         )
-    except ValueError as ve:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(ve))
-    except Exception as e:
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(exc),
+        ) from exc
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Unexpected error: {e}",
+            detail=f"Unexpected error: {exc}",
+        ) from exc
+
+
+@app.post(
+    "/explain",
+    response_model=URLResponse,
+    dependencies=[Depends(verify_api_key), Depends(rate_limiter)],
+    status_code=status.HTTP_200_OK,
+)
+async def explain_url(request_data: URLRequest):
+    try:
+        result = run_example(request_data.url, include_explanations=True)
+        return URLResponse(
+            url=result["url"],
+            verdict=result["verdict"],
+            confidence=result["confidence"],
+            threshold_used=THRESHOLD,
+            reasons=result.get("reasons", []),
+            model_breakdown=result.get("model_breakdown", {}),
         )
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(exc),
+        ) from exc
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Unexpected error: {exc}",
+        ) from exc
 
 
-# -------------------------
-# Auth routes
-# -------------------------
 @app.post("/signup", status_code=status.HTTP_201_CREATED)
 async def signup(payload: SignupRequest):
     try:
         user = create_user(payload.username, payload.password)
         return {"message": "User created", "user": user}
-    except ValueError as ve:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(ve))
-    except Exception as e:
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(exc),
+        ) from exc
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Unexpected error: {e}",
-        )
+            detail=f"Unexpected error: {exc}",
+        ) from exc
 
 
 @app.post("/login", response_model=LoginResponse, status_code=status.HTTP_200_OK)
@@ -128,8 +147,3 @@ async def me(current_user=Depends(verify_api_key)):
     return public_user
 
 
-# -------------------------
-# Server startup
-# -------------------------
-# if __name__ == "__main__":
-# uvicorn.run("endpoint:app", host="0.0.0.0", port=8000, reload=True)

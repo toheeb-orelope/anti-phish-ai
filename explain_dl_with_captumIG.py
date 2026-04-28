@@ -1,4 +1,3 @@
-# explain_dl_with_captumIG.py
 import torch
 import re
 import numpy as np
@@ -13,7 +12,7 @@ def url_to_indices(url: str, max_len=200):
     s = str(url)[:max_len].ljust(max_len)
     return torch.tensor([min(ord(c), 127) for c in s], dtype=torch.long).unsqueeze(
         0
-    )  # [1, seq]
+    )  
 
 
 def url_to_floats(url: str, max_len=200):
